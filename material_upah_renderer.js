@@ -2,57 +2,48 @@ const { ipcRenderer } = require("electron");
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOMContentLoaded");
   loadMaterials();
-  setupEventListeners();
+  initializeSearchInput();
 });
 
-// Setup event listeners
-function setupEventListeners() {
-  console.log("Setting up event listeners");
-  // Handle search input
+// Initialize search input
+function initializeSearchInput() {
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
-    console.log("Found search input");
-    // Clear and focus the input
-    searchInput.value = "";
-    searchInput.focus();
-
-    // Add input event listener
-    searchInput.addEventListener("input", handleSearch);
-
-    // Add focus event listener for debugging
-    searchInput.addEventListener("focus", () =>
-      console.log("Search input focused")
-    );
-    searchInput.addEventListener("blur", () =>
-      console.log("Search input lost focus")
-    );
-  }
-
-  // Stop propagation for modal content clicks
-  const modalContent = document.querySelector(".modal-content");
-  if (modalContent) {
-    modalContent.addEventListener("click", (e) => e.stopPropagation());
-  }
-
-  // Handle enter key
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.target.tagName.toLowerCase() !== "textarea") {
-      e.preventDefault();
+    // Add input event listener once
+    if (!searchInput.hasAttribute("data-has-handler")) {
+      searchInput.addEventListener("input", (event) => {
+        const searchTerm = event.target.value.trim();
+        if (searchTerm === "") {
+          loadMaterials();
+        } else {
+          ipcRenderer.send("search-materials", searchTerm);
+        }
+      });
+      searchInput.setAttribute("data-has-handler", "true");
     }
-  });
+  }
 }
 
 // Load materials from the database
 function loadMaterials() {
-  console.log("Loading materials");
   ipcRenderer.send("get-materials");
 }
 
+// Focus handler from main process
+ipcRenderer.on("focus-search", () => {
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.disabled = false;
+    searchInput.focus();
+    // Place cursor at end of text
+    const len = searchInput.value.length;
+    searchInput.setSelectionRange(len, len);
+  }
+});
+
 // Handle materials data received from main process
 ipcRenderer.on("materials-data", (event, materials) => {
-  console.log("Received materials data");
   const tableBody = document.getElementById("materialTableBody");
   tableBody.innerHTML = "";
 
@@ -73,35 +64,10 @@ ipcRenderer.on("materials-data", (event, materials) => {
   });
 
   document.getElementById("materialCount").textContent = materials.length;
-
-  // Re-enable and focus search input after table update
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.disabled = false;
-    searchInput.focus();
-    console.log("Focused search input after materials update");
-  }
 });
-
-// Search functionality
-function handleSearch(event) {
-  console.log("Search input changed");
-  const searchInput = event.target;
-  const searchTerm = searchInput.value.trim();
-
-  // Ensure input is enabled
-  searchInput.disabled = false;
-
-  if (searchTerm === "") {
-    loadMaterials();
-  } else {
-    ipcRenderer.send("search-materials", searchTerm);
-  }
-}
 
 // Modal handling
 function addNewMaterial() {
-  console.log("Opening add material modal");
   const modal = document.getElementById("addMaterialModal");
 
   // Clear form fields
@@ -113,25 +79,18 @@ function addNewMaterial() {
   modal.style.display = "block";
 
   // Focus first input
-  document.getElementById("newName").focus();
-}
-
-function closeModal() {
-  console.log("Closing modal");
-  const modal = document.getElementById("addMaterialModal");
-  modal.style.display = "none";
-
-  // Return focus to search
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.disabled = false;
-    searchInput.focus();
-    console.log("Focused search input after closing modal");
+  const nameInput = document.getElementById("newName");
+  if (nameInput) {
+    nameInput.focus();
   }
 }
 
+function closeModal() {
+  const modal = document.getElementById("addMaterialModal");
+  modal.style.display = "none";
+}
+
 function saveMaterial() {
-  console.log("Saving material");
   const name = document.getElementById("newName").value.trim();
   const unit = document.getElementById("newUnit").value.trim();
   const price = document.getElementById("newPrice").value;
@@ -154,7 +113,6 @@ function saveMaterial() {
 
 // Handle material added successfully
 ipcRenderer.on("material-added", (event, response) => {
-  console.log("Material added response received");
   if (response && response.error) {
     alert("Error: " + response.error);
   } else {
@@ -171,48 +129,64 @@ function editMaterial(id) {
 // Delete material
 function deleteMaterial(id) {
   if (confirm("Apakah Anda yakin ingin menghapus item ini?")) {
-    console.log("Deleting material:", id);
-    // Store search input value before deletion
-    const searchInput = document.getElementById("searchInput");
-    const searchValue = searchInput ? searchInput.value : "";
-
     ipcRenderer.send("delete-material", id);
 
-    // Re-enable and focus search input immediately
-    if (searchInput) {
-      searchInput.disabled = false;
+    // Only reset search if input is not focused and modal is closed
+    const searchInput = document.getElementById("searchInput");
+    const modal = document.getElementById("addMaterialModal");
+
+    if (
+      searchInput &&
+      document.activeElement !== searchInput &&
+      modal.style.display === "none"
+    ) {
+      const searchValue = searchInput.value;
       searchInput.value = searchValue;
-      searchInput.focus();
-      console.log("Focused search input after delete");
     }
   }
 }
 
 // Handle successful deletion
 ipcRenderer.on("material-deleted", (event, response) => {
-  console.log("Material deleted response received");
   if (response && response.error) {
     alert("Error: " + response.error);
   }
-
-  // Re-enable and focus search input before reloading materials
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.disabled = false;
-    searchInput.focus();
-    console.log("Focused search input before reloading materials");
-  }
-
   loadMaterials();
 });
 
-// Window click handler for modal
+// Close modal when clicking outside
 window.onclick = function (event) {
   const modal = document.getElementById("addMaterialModal");
   if (event.target === modal) {
     closeModal();
   }
 };
+
+// Prevent modal from closing when clicking inside
+document.addEventListener("click", function (event) {
+  const modalContent = document.querySelector(".modal-content");
+  if (modalContent && modalContent.contains(event.target)) {
+    event.stopPropagation();
+  }
+});
+
+// Prevent form submission on enter
+document.addEventListener("keydown", function (event) {
+  if (
+    event.key === "Enter" &&
+    event.target.tagName.toLowerCase() !== "textarea"
+  ) {
+    event.preventDefault();
+  }
+});
+
+// Keep search input enabled
+document.addEventListener("click", function (event) {
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput && searchInput.disabled) {
+    searchInput.disabled = false;
+  }
+});
 
 // Logout/Exit function
 function logout() {

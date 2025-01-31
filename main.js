@@ -9,7 +9,6 @@ function initDatabase() {
   try {
     db = new Database("database.sqlite", { verbose: console.log });
 
-    // Create tables if they don't exist
     db.exec(`
             CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,7 +21,6 @@ function initDatabase() {
             )
         `);
 
-    // Drop and recreate materials table to add category column
     db.exec(`DROP TABLE IF EXISTS materials`);
 
     db.exec(`
@@ -59,7 +57,6 @@ function initDatabase() {
             )
         `);
 
-    // Insert default admin user if it doesn't exist
     const adminExists = db
       .prepare("SELECT * FROM admin WHERE username = ?")
       .get("admin");
@@ -77,59 +74,34 @@ function initDatabase() {
 }
 
 function createWindow() {
-  if (mainWindow) {
-    if (mainWindow.isDestroyed()) {
-      mainWindow = null;
-    } else {
-      mainWindow.focus();
-      return;
-    }
-  }
-
   mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      webSecurity: false,
     },
-    show: false,
   });
 
   mainWindow.loadFile("login.html");
-
-  mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
-    mainWindow.focus();
-  });
-
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-  });
-
   initDatabase();
 }
 
-// This method will be called when Electron has finished initialization
 app.whenReady().then(createWindow);
 
-// Quit when all windows are closed.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     if (db) {
-      try {
-        db.close();
-      } catch (err) {
-        console.error("Error closing database:", err);
-      }
+      db.close();
     }
     app.quit();
   }
 });
 
 app.on("activate", () => {
-  createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
 
 // Login handler
@@ -157,6 +129,8 @@ ipcMain.on("get-materials", (event) => {
       .prepare("SELECT * FROM materials ORDER BY created_at DESC")
       .all();
     event.reply("materials-data", materials);
+    // Tell renderer to focus search input
+    event.reply("focus-search");
   } catch (err) {
     console.error("Error fetching materials:", err);
     event.reply("materials-data", []);
@@ -195,40 +169,10 @@ ipcMain.on("delete-material", (event, id) => {
   try {
     db.prepare("DELETE FROM materials WHERE id = ?").run(id);
     event.reply("material-deleted");
+    // Tell renderer to focus search input
+    event.reply("focus-search");
   } catch (err) {
     console.error("Error deleting material:", err);
     event.reply("material-deleted", { error: err.message });
-  }
-});
-
-// Handle graceful shutdown
-process.on("exit", () => {
-  if (db) {
-    try {
-      db.close();
-    } catch (err) {
-      console.error("Error closing database:", err);
-    }
-  }
-});
-
-process.on("SIGINT", () => {
-  if (db) {
-    try {
-      db.close();
-    } catch (err) {
-      console.error("Error closing database:", err);
-    }
-  }
-  app.quit();
-});
-
-app.on("before-quit", () => {
-  if (db) {
-    try {
-      db.close();
-    } catch (err) {
-      console.error("Error closing database:", err);
-    }
   }
 });
