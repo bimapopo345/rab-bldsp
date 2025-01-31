@@ -10,18 +10,6 @@ function initDatabase() {
     db = new Database("database.sqlite", { verbose: console.log });
 
     db.exec(`
-      CREATE TABLE IF NOT EXISTS projects (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        start_date TEXT,
-        end_date TEXT,
-        status TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    db.exec(`
       CREATE TABLE IF NOT EXISTS materials (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -34,16 +22,14 @@ function initDatabase() {
     `);
 
     db.exec(`
-      CREATE TABLE IF NOT EXISTS cost_estimates (
+      CREATE TABLE IF NOT EXISTS ahs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
-        material_id INTEGER,
-        quantity REAL NOT NULL,
-        total_cost REAL NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (project_id) REFERENCES projects (id),
-        FOREIGN KEY (material_id) REFERENCES materials (id)
-      )
+        kelompok TEXT NOT NULL,
+        kode_ahs TEXT NOT NULL,
+        ahs TEXT NOT NULL,
+        satuan TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     db.exec(`
