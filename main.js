@@ -10,56 +10,55 @@ function initDatabase() {
     db = new Database("database.sqlite", { verbose: console.log });
 
     db.exec(`
-            CREATE TABLE IF NOT EXISTS projects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                description TEXT,
-                start_date TEXT,
-                end_date TEXT,
-                status TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-    db.exec(`DROP TABLE IF EXISTS materials`);
+      CREATE TABLE IF NOT EXISTS projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        start_date TEXT,
+        end_date TEXT,
+        status TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     db.exec(`
-            CREATE TABLE materials (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                unit TEXT NOT NULL,
-                price REAL NOT NULL,
-                category TEXT NOT NULL,
-                description TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+      CREATE TABLE IF NOT EXISTS materials (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        unit TEXT NOT NULL,
+        price REAL NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     db.exec(`
-            CREATE TABLE IF NOT EXISTS cost_estimates (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER,
-                material_id INTEGER,
-                quantity REAL NOT NULL,
-                total_cost REAL NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects (id),
-                FOREIGN KEY (material_id) REFERENCES materials (id)
-            )
-        `);
+      CREATE TABLE IF NOT EXISTS cost_estimates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER,
+        material_id INTEGER,
+        quantity REAL NOT NULL,
+        total_cost REAL NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES projects (id),
+        FOREIGN KEY (material_id) REFERENCES materials (id)
+      )
+    `);
 
     db.exec(`
-            CREATE TABLE IF NOT EXISTS admin (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+      CREATE TABLE IF NOT EXISTS admin (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     const adminExists = db
       .prepare("SELECT * FROM admin WHERE username = ?")
       .get("admin");
+
     if (!adminExists) {
       db.prepare("INSERT INTO admin (username, password) VALUES (?, ?)").run(
         "admin",
@@ -84,7 +83,33 @@ function createWindow() {
   });
 
   mainWindow.loadFile("login.html");
+
   initDatabase();
+
+  // Workaround for focus issue on Windows
+  const isWindows = process.platform === "win32";
+  let needsFocusFix = false;
+  let triggeringProgrammaticBlur = false;
+
+  mainWindow.on("blur", (event) => {
+    if (!triggeringProgrammaticBlur) {
+      needsFocusFix = true;
+    }
+  });
+
+  mainWindow.on("focus", (event) => {
+    if (isWindows && needsFocusFix) {
+      needsFocusFix = false;
+      triggeringProgrammaticBlur = true;
+      setTimeout(function () {
+        mainWindow.blur();
+        mainWindow.focus();
+        setTimeout(function () {
+          triggeringProgrammaticBlur = false;
+        }, 100);
+      }, 100);
+    }
+  });
 }
 
 app.whenReady().then(createWindow);
