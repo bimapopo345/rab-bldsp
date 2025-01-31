@@ -213,25 +213,13 @@ ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
 });
 
 // Get all AHS
+// Get all AHS
 ipcMain.on("get-ahs", (event) => {
   try {
     const ahs = db.prepare("SELECT * FROM ahs ORDER BY kode_ahs ASC").all();
     event.reply("ahs-data", ahs);
   } catch (err) {
     console.error("Error fetching AHS:", err);
-    event.reply("ahs-data", []);
-  }
-});
-
-// Search AHS
-ipcMain.on("search-ahs", (event, searchTerm) => {
-  try {
-    const ahs = db
-      .prepare("SELECT * FROM ahs WHERE ahs LIKE ? OR kode_ahs LIKE ?")
-      .all(`%${searchTerm}%`, `%${searchTerm}%`);
-    event.reply("ahs-data", ahs);
-  } catch (err) {
-    console.error("Error searching AHS:", err);
     event.reply("ahs-data", []);
   }
 });
@@ -244,6 +232,40 @@ ipcMain.on("get-ahs-by-id", (event, id) => {
   } catch (err) {
     console.error("Error fetching AHS by ID:", err);
     event.reply("ahs-data", {});
+  }
+});
+
+// Add AHS
+ipcMain.on("add-ahs", (event, ahsData) => {
+  try {
+    const stmt = db.prepare(
+      "INSERT INTO ahs (kelompok, kode_ahs, ahs, satuan) VALUES (?, ?, ?, ?)"
+    );
+    stmt.run(ahsData.kelompok, ahsData.kode_ahs, ahsData.ahs, ahsData.satuan);
+    event.reply("ahs-added");
+  } catch (err) {
+    console.error("Error adding AHS:", err);
+    event.reply("ahs-added", { error: err.message });
+  }
+});
+
+// Update AHS
+ipcMain.on("update-ahs", (event, ahsData) => {
+  try {
+    const stmt = db.prepare(
+      "UPDATE ahs SET kelompok = ?, kode_ahs = ?, ahs = ?, satuan = ? WHERE id = ?"
+    );
+    stmt.run(
+      ahsData.kelompok,
+      ahsData.kode_ahs,
+      ahsData.ahs,
+      ahsData.satuan,
+      ahsData.id
+    );
+    event.reply("ahs-updated");
+  } catch (err) {
+    console.error("Error updating AHS:", err);
+    event.reply("ahs-updated", { error: err.message });
   }
 });
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar AHS</title>
     <style>
-        /* Styling untuk halaman Daftar AHS mirip dengan Material & Upah */
+        /* Styling untuk halaman Daftar AHS */
         body {
             font-family: Arial, sans-serif;
             background-color: #e4e4e4;
@@ -93,11 +93,74 @@
             text-align: center;
             color: #666;
         }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .modal-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            margin-left: 10px;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
     </style>
 </head>
 
 <body>
-    <button class="logout-btn" onclick="logout()">Exit</button>
+    <button class="back-btn" onclick="goBack()">Kembali</button>
+
 
     <div class="container">
         <h1>Daftar AHS</h1>
@@ -114,6 +177,7 @@
                     <th>Kode AHS</th>
                     <th>AHS</th>
                     <th>Satuan</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="ahsTableBody">
@@ -123,6 +187,62 @@
 
         <div class="footer">
             <p>Total: <span id="ahsCount">0</span> AHS</p>
+        </div>
+    </div>
+
+    <!-- Modal untuk menambah AHS baru -->
+    <div id="addAhsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAhsModal()">&times;</span>
+            <h2>Tambah AHS Baru</h2>
+            <div class="form-group">
+                <label for="newKelompok">Kelompok:</label>
+                <input type="text" id="newKelompok" required>
+            </div>
+            <div class="form-group">
+                <label for="newKodeAhs">Kode AHS:</label>
+                <input type="text" id="newKodeAhs" required>
+            </div>
+            <div class="form-group">
+                <label for="newAhs">AHS:</label>
+                <input type="text" id="newAhs" required>
+            </div>
+            <div class="form-group">
+                <label for="newSatuan">Satuan:</label>
+                <input type="text" id="newSatuan" required>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeAhsModal()">Batal</button>
+                <button onclick="saveAhs()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Edit AHS -->
+    <div id="editAhsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditAhsModal()">&times;</span>
+            <h2>Edit AHS</h2>
+            <div class="form-group">
+                <label for="editKelompok">Kelompok:</label>
+                <input type="text" id="editKelompok" required>
+            </div>
+            <div class="form-group">
+                <label for="editKodeAhs">Kode AHS:</label>
+                <input type="text" id="editKodeAhs" required>
+            </div>
+            <div class="form-group">
+                <label for="editAhs">AHS:</label>
+                <input type="text" id="editAhs" required>
+            </div>
+            <div class="form-group">
+                <label for="editSatuan">Satuan:</label>
+                <input type="text" id="editSatuan" required>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeEditAhsModal()">Cancel</button>
+                <button onclick="updateAhs()">Update</button>
+            </div>
         </div>
     </div>
 
