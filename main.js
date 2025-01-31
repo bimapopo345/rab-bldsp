@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const Database = require("better-sqlite3");
 
@@ -46,6 +46,26 @@ function initDatabase() {
             )
         `);
 
+    db.exec(`
+            CREATE TABLE IF NOT EXISTS admin (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+    // Insert default admin user if it doesn't exist
+    const adminExists = db
+      .prepare("SELECT * FROM admin WHERE username = ?")
+      .get("admin");
+    if (!adminExists) {
+      db.prepare("INSERT INTO admin (username, password) VALUES (?, ?)").run(
+        "admin",
+        "admin"
+      );
+    }
+
     console.log("Database initialized successfully!");
   } catch (err) {
     console.error("Database initialization error:", err);
@@ -62,18 +82,28 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile("index.html");
+  mainWindow.loadFile("login.html"); // Changed to start with login page
+  initDatabase(); // Initialize database and create default admin user
 }
 
-app.whenReady().then(() => {
-  initDatabase();
-  createWindow();
+app.whenReady().then(createWindow);
 
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+ipcMain.on("login", (event, { username, password }) => {
+  try {
+    const user = db
+      .prepare("SELECT * FROM admin WHERE username = ? AND password = ?")
+      .get(username, password);
+
+    if (user) {
+      mainWindow.loadFile("index.html"); // Redirect to index.html after successful login
+      event.reply("login-result", "success");
+    } else {
+      event.reply("login-result", "failure");
     }
-  });
+  } catch (err) {
+    console.error("Login error:", err);
+    event.reply("login-result", "failure");
+  }
 });
 
 app.on("window-all-closed", () => {

@@ -6,6 +6,22 @@ const db = new Database("database.sqlite", { verbose: console.log });
 
 // Create tables
 function initializeDatabase() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS admin (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL
+    );
+  `);
+
+  // Menambahkan admin default jika belum ada
+  const existingAdmin = db.prepare("SELECT COUNT(*) AS count FROM admin").get();
+  if (existingAdmin.count === 0) {
+    db.prepare("INSERT INTO admin (username, password) VALUES (?, ?)").run(
+      "admin",
+      "admin123"
+    );
+  }
   // Projects table
   db.exec(`
         CREATE TABLE IF NOT EXISTS projects (
