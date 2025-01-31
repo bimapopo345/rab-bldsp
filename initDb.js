@@ -14,7 +14,6 @@ function initializeDatabase() {
     );
   `);
 
-  // Menambahkan admin default jika belum ada
   const existingAdmin = db.prepare("SELECT COUNT(*) AS count FROM admin").get();
   if (existingAdmin.count === 0) {
     db.prepare("INSERT INTO admin (username, password) VALUES (?, ?)").run(
@@ -22,54 +21,22 @@ function initializeDatabase() {
       "admin123"
     );
   }
-  // Projects table
-  db.exec(`
-        CREATE TABLE IF NOT EXISTS projects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            description TEXT,
-            start_date TEXT,
-            end_date TEXT,
-            status TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
 
-  // Materials table
-  db.exec(`
-        CREATE TABLE IF NOT EXISTS materials (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            unit TEXT NOT NULL,
-            price REAL NOT NULL,
-            description TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+  // Menghapus tabel yang tidak dibutuhkan
+  db.exec("DROP TABLE IF EXISTS projects;");
+  db.exec("DROP TABLE IF EXISTS cost_estimates;");
 
-  // Cost estimates table
   db.exec(`
-        CREATE TABLE IF NOT EXISTS cost_estimates (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER,
-            material_id INTEGER,
-            quantity REAL NOT NULL,
-            total_cost REAL NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects (id),
-            FOREIGN KEY (material_id) REFERENCES materials (id)
-        )
-    `);
-  db.exec(`
-      CREATE TABLE IF NOT EXISTS materials (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        satuan TEXT NOT NULL,
-        harga REAL NOT NULL,
-        kategori TEXT NOT NULL,
-        update TEXT NOT NULL
-      );
-    `);
+    CREATE TABLE IF NOT EXISTS materials (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      unit TEXT NOT NULL,
+      price REAL NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
   // Create AHS table
   db.exec(`

@@ -32,18 +32,6 @@ function loadAhs() {
   ipcRenderer.send("get-ahs");
 }
 
-// Focus handler from main process
-ipcRenderer.on("focus-search", () => {
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.disabled = false;
-    searchInput.focus();
-    // Place cursor at end of text
-    const len = searchInput.value.length;
-    searchInput.setSelectionRange(len, len);
-  }
-});
-
 // Handle AHS data received from main process
 ipcRenderer.on("ahs-data", (event, ahs) => {
   const tableBody = document.getElementById("ahsTableBody");
@@ -52,15 +40,11 @@ ipcRenderer.on("ahs-data", (event, ahs) => {
   ahs.forEach((item) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>${item.kelompok}</td>
-            <td>${item.kode_ahs}</td>
-            <td>${item.ahs}</td>
-            <td>${item.satuan}</td>
-            <td>
-                <button onclick="editAhs(${item.id})">Edit</button>
-                <button onclick="deleteAhs(${item.id})">Hapus</button>
-            </td>
-        `;
+        <td>${item.kelompok}</td>
+        <td>${item.kode_ahs}</td>
+        <td>${item.ahs}</td>
+        <td>${item.satuan}</td>
+    `;
     tableBody.appendChild(row);
   });
 
