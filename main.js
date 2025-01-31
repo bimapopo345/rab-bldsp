@@ -22,13 +22,16 @@ function initDatabase() {
             )
         `);
 
+    // Drop and recreate materials table to add category column
+    db.exec(`DROP TABLE IF EXISTS materials`);
+
     db.exec(`
-            CREATE TABLE IF NOT EXISTS materials (
+            CREATE TABLE materials (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 unit TEXT NOT NULL,
                 price REAL NOT NULL,
-                category TEXT,
+                category TEXT NOT NULL,
                 description TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -85,9 +88,48 @@ function createWindow() {
 
   mainWindow.loadFile("login.html");
   initDatabase();
+
+  // Handle window close
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
 }
 
+// Handle app ready
 app.whenReady().then(createWindow);
+
+// Handle all windows closed
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    if (db) {
+      try {
+        db.close();
+      } catch (err) {
+        console.error("Error closing database:", err);
+      }
+    }
+    app.quit();
+  }
+});
+
+// Handle app activation
+app.on("activate", () => {
+  if (mainWindow === null) {
+    createWindow();
+  }
+});
+
+// Handle process termination
+process.on("SIGINT", () => {
+  if (db) {
+    try {
+      db.close();
+    } catch (err) {
+      console.error("Error closing database:", err);
+    }
+  }
+  app.quit();
+});
 
 // Login handler
 ipcMain.on("login", (event, { username, password }) => {
@@ -133,6 +175,20 @@ ipcMain.on("search-materials", (event, searchTerm) => {
   }
 });
 
+// Add new material
+ipcMain.on("add-material", (event, material) => {
+  try {
+    const stmt = db.prepare(
+      "INSERT INTO materials (name, unit, price, category) VALUES (?, ?, ?, ?)"
+    );
+    stmt.run(material.name, material.unit, material.price, material.category);
+    event.reply("material-added");
+  } catch (err) {
+    console.error("Error adding material:", err);
+    event.reply("material-added", { error: err.message });
+  }
+});
+
 // Delete material
 ipcMain.on("delete-material", (event, id) => {
   try {
@@ -140,20 +196,6 @@ ipcMain.on("delete-material", (event, id) => {
     event.reply("material-deleted");
   } catch (err) {
     console.error("Error deleting material:", err);
-  }
-});
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    if (db) {
-      db.close();
-    }
-    app.quit();
-  }
-});
-
-app.on("before-quit", () => {
-  if (db) {
-    db.close();
+    event.reply("material-deleted", { error: err.message });
   }
 });

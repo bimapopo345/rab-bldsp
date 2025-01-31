@@ -3,7 +3,43 @@ const { ipcRenderer } = require("electron");
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
   loadMaterials();
+  initializeEventListeners();
 });
+
+// Initialize all event listeners
+function initializeEventListeners() {
+  // Search input handler
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", searchMaterial);
+  }
+
+  // Modal close handlers
+  const modal = document.getElementById("addMaterialModal");
+  const modalContent = modal.querySelector(".modal-content");
+
+  // Close modal when clicking outside
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Prevent modal from closing when clicking inside
+  modalContent.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  // Form submission prevention
+  document.addEventListener("keydown", (event) => {
+    if (
+      event.key === "Enter" &&
+      event.target.tagName.toLowerCase() !== "textarea"
+    ) {
+      event.preventDefault();
+    }
+  });
+}
 
 // Load materials from the database
 function loadMaterials() {
@@ -32,19 +68,81 @@ ipcRenderer.on("materials-data", (event, materials) => {
   });
 
   document.getElementById("materialCount").textContent = materials.length;
+
+  // Ensure search input is enabled and focused
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.disabled = false;
+    searchInput.focus();
+  }
 });
 
-// Search functionality
-function searchMaterial() {
-  const searchTerm = document.getElementById("searchInput").value;
-  ipcRenderer.send("search-materials", searchTerm);
+// Search functionality with debounce
+let searchTimeout;
+function searchMaterial(event) {
+  const searchInput = event.target;
+  clearTimeout(searchTimeout);
+
+  // Ensure input is enabled
+  searchInput.disabled = false;
+
+  searchTimeout = setTimeout(() => {
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm === "") {
+      loadMaterials(); // Load all materials if search is empty
+    } else {
+      ipcReader.send("search-materials", searchTerm);
+    }
+  }, 300); // Wait 300ms after user stops typing
 }
 
-// Add new material
+// Modal handling
 function addNewMaterial() {
-  // TODO: Implement add new material dialog
-  console.log("Adding new material...");
+  const modal = document.getElementById("addMaterialModal");
+
+  // Clear and enable form fields
+  const inputs = modal.querySelectorAll("input, select");
+  inputs.forEach((input) => {
+    input.value = "";
+    input.disabled = false;
+  });
+
+  // Set default category
+  document.getElementById("newCategory").value = "Material";
+
+  modal.style.display = "block";
 }
+
+function closeModal() {
+  const modal = document.getElementById("addMaterialModal");
+  modal.style.display = "none";
+}
+
+function saveMaterial() {
+  const name = document.getElementById("newName").value.trim();
+  const unit = document.getElementById("newUnit").value.trim();
+  const price = document.getElementById("newPrice").value;
+  const category = document.getElementById("newCategory").value;
+
+  if (!name || !unit || !price) {
+    alert("Semua field harus diisi!");
+    return;
+  }
+
+  ipcRenderer.send("add-material", {
+    name,
+    unit,
+    price: parseFloat(price),
+    category,
+  });
+
+  closeModal();
+}
+
+// Handle material added successfully
+ipcRenderer.on("material-added", () => {
+  loadMaterials(); // Reload the materials list
+});
 
 // Edit material
 function editMaterial(id) {
@@ -62,6 +160,13 @@ function deleteMaterial(id) {
 // Handle successful deletion
 ipcRenderer.on("material-deleted", () => {
   loadMaterials(); // Reload the materials list
+
+  // Re-enable and focus search input
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.disabled = false;
+    searchInput.focus();
+  }
 });
 
 // Logout/Exit function
