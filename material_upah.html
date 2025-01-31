@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Bahan Upah & Alat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e4e4e4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 70%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .logout-btn {
+            background-color: red;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .back-btn {
+            background-color: #666;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+
+        .back-btn:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">Kembali</button>
+    <button class="logout-btn" onclick="logout()">Exit</button>
+
+    <div class="container">
+        <h1>Daftar Bahan Upah & Alat</h1>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Cari Bahan / Upah / Alat" onkeyup="searchMaterial()">
+            <button onclick="addNewMaterial()">+ Baru</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Satuan</th>
+                    <th>Harga</th>
+                    <th>Kategori</th>
+                    <th>Update Terakhir</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="materialTableBody">
+                <!-- Data rows will be populated here -->
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <p>Total: <span id="materialCount">0</span> Bahan & Upah</p>
+        </div>
+
+    </div>
+
+    <script src="material_upah_renderer.js"></script>
+</body>
+
+</html>

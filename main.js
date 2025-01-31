@@ -28,6 +28,7 @@ function initDatabase() {
                 name TEXT NOT NULL,
                 unit TEXT NOT NULL,
                 price REAL NOT NULL,
+                category TEXT,
                 description TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -82,12 +83,13 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile("login.html"); // Changed to start with login page
-  initDatabase(); // Initialize database and create default admin user
+  mainWindow.loadFile("login.html");
+  initDatabase();
 }
 
 app.whenReady().then(createWindow);
 
+// Login handler
 ipcMain.on("login", (event, { username, password }) => {
   try {
     const user = db
@@ -95,7 +97,6 @@ ipcMain.on("login", (event, { username, password }) => {
       .get(username, password);
 
     if (user) {
-      mainWindow.loadFile("index.html"); // Redirect to index.html after successful login
       event.reply("login-result", "success");
     } else {
       event.reply("login-result", "failure");
@@ -103,6 +104,42 @@ ipcMain.on("login", (event, { username, password }) => {
   } catch (err) {
     console.error("Login error:", err);
     event.reply("login-result", "failure");
+  }
+});
+
+// Get all materials
+ipcMain.on("get-materials", (event) => {
+  try {
+    const materials = db
+      .prepare("SELECT * FROM materials ORDER BY created_at DESC")
+      .all();
+    event.reply("materials-data", materials);
+  } catch (err) {
+    console.error("Error fetching materials:", err);
+    event.reply("materials-data", []);
+  }
+});
+
+// Search materials
+ipcMain.on("search-materials", (event, searchTerm) => {
+  try {
+    const materials = db
+      .prepare("SELECT * FROM materials WHERE name LIKE ? OR category LIKE ?")
+      .all(`%${searchTerm}%`, `%${searchTerm}%`);
+    event.reply("materials-data", materials);
+  } catch (err) {
+    console.error("Error searching materials:", err);
+    event.reply("materials-data", []);
+  }
+});
+
+// Delete material
+ipcMain.on("delete-material", (event, id) => {
+  try {
+    db.prepare("DELETE FROM materials WHERE id = ?").run(id);
+    event.reply("material-deleted");
+  } catch (err) {
+    console.error("Error deleting material:", err);
   }
 });
 
