@@ -285,6 +285,38 @@
             </div>
         </div>
     </div>
+    <!-- Modal untuk Edit Material -->
+    <div id="editMaterialModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Bahan Upah & Alat</h2>
+            <div class="form-group">
+                <label for="editName">Nama:</label>
+                <input type="text" id="editName" required>
+            </div>
+            <div class="form-group">
+                <label for="editUnit">Satuan:</label>
+                <input type="text" id="editUnit" required>
+            </div>
+            <div class="form-group">
+                <label for="editPrice">Harga Satuan:</label>
+                <input type="number" id="editPrice" required>
+            </div>
+            <div class="form-group">
+                <label for="editCategory">Kategori:</label>
+                <select id="editCategory" required>
+                    <option value="Material">Material</option>
+                    <option value="Upah">Upah</option>
+                    <option value="Alat">Alat</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeEditModal()">Cancel</button>
+                <button onclick="updateMaterial()">Update</button>
+            </div>
+        </div>
+    </div>
+
 
 
     <script src="material_upah_renderer.js"></script>

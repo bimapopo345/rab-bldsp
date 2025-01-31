@@ -1,5 +1,7 @@
 const { ipcRenderer } = require("electron");
 
+let currentMaterialId = null;
+
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
   loadMaterials();
@@ -43,6 +45,18 @@ ipcRenderer.on("focus-search", () => {
 });
 
 // Handle materials data received from main process
+ipcRenderer.on("material-data", (event, material) => {
+  document.getElementById("editName").value = material.name;
+  document.getElementById("editUnit").value = material.unit;
+  document.getElementById("editPrice").value = material.price;
+  document.getElementById("editCategory").value = material.category;
+
+  // Tampilkan modal
+  const modal = document.getElementById("editMaterialModal");
+  modal.style.display = "block";
+});
+
+// Menampilkan semua material dalam tabel
 ipcRenderer.on("materials-data", (event, materials) => {
   const tableBody = document.getElementById("materialTableBody");
   tableBody.innerHTML = "";
@@ -50,20 +64,27 @@ ipcRenderer.on("materials-data", (event, materials) => {
   materials.forEach((material) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>${material.name}</td>
-            <td>${material.unit}</td>
-            <td>Rp ${material.price.toLocaleString()}</td>
-            <td>${material.category || "-"}</td>
-            <td>${new Date(material.created_at).toLocaleDateString()}</td>
-            <td>
-                <button onclick="editMaterial(${material.id})">Edit</button>
-                <button onclick="deleteMaterial(${material.id})">Hapus</button>
-            </td>
-        `;
+          <td>${material.name}</td>
+          <td>${material.unit}</td>
+          <td>Rp ${material.price.toLocaleString()}</td>
+          <td>${material.category}</td>
+          <td>${new Date(material.created_at).toLocaleDateString()}</td>
+          <td>
+              <button onclick="editMaterial(${material.id})">Edit</button>
+              <button onclick="deleteMaterial(${material.id})">Hapus</button>
+          </td>
+      `;
     tableBody.appendChild(row);
   });
+});
 
-  document.getElementById("materialCount").textContent = materials.length;
+ipcRenderer.on("material-updated", (event, response) => {
+  if (response && response.error) {
+    alert("Error: " + response.error);
+  } else {
+    loadMaterials(); // Reload data material setelah update
+    alert("Material updated successfully");
+  }
 });
 
 // Modal handling
@@ -85,9 +106,37 @@ function addNewMaterial() {
   }
 }
 
-function closeModal() {
+function closeAddModal() {
   const modal = document.getElementById("addMaterialModal");
-  modal.style.display = "none";
+  if (modal) modal.style.display = "none";
+}
+
+function closeEditModal() {
+  const modal = document.getElementById("editMaterialModal");
+  if (modal) modal.style.display = "none";
+}
+
+function updateMaterial() {
+  const name = document.getElementById("editName").value.trim();
+  const unit = document.getElementById("editUnit").value.trim();
+  const price = document.getElementById("editPrice").value;
+  const category = document.getElementById("editCategory").value;
+
+  if (!name || !unit || !price) {
+    alert("Semua field harus diisi!");
+    return;
+  }
+
+  // Kirim data yang diperbarui ke backend untuk disimpan di database
+  ipcRenderer.send("update-material", {
+    id: currentMaterialId,
+    name,
+    unit,
+    price,
+    category,
+  });
+
+  closeEditModal(); // Menutup modal setelah update
 }
 
 function saveMaterial() {
@@ -108,7 +157,7 @@ function saveMaterial() {
     category,
   });
 
-  closeModal();
+  closeAddModal();
 }
 
 // Handle material added successfully
@@ -122,8 +171,11 @@ ipcRenderer.on("material-added", (event, response) => {
 
 // Edit material
 function editMaterial(id) {
-  // TODO: Implement edit material dialog
-  console.log("Editing material:", id);
+  // Menyimpan id material yang akan diedit
+  currentMaterialId = id;
+
+  // Kirim permintaan untuk mengambil data material berdasarkan id
+  ipcRenderer.send("get-material-by-id", id);
 }
 
 // Delete material
@@ -156,9 +208,14 @@ ipcRenderer.on("material-deleted", (event, response) => {
 
 // Close modal when clicking outside
 window.onclick = function (event) {
-  const modal = document.getElementById("addMaterialModal");
-  if (event.target === modal) {
-    closeModal();
+  const addModal = document.getElementById("addMaterialModal");
+  const editModal = document.getElementById("editMaterialModal");
+
+  if (event.target === addModal) {
+    closeAddModal();
+  }
+  if (event.target === editModal) {
+    closeEditModal();
   }
 };
 

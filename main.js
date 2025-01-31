@@ -201,3 +201,27 @@ ipcMain.on("delete-material", (event, id) => {
     event.reply("material-deleted", { error: err.message });
   }
 });
+
+// Mendapatkan material berdasarkan id
+ipcMain.on("get-material-by-id", (event, id) => {
+  try {
+    const material = db.prepare("SELECT * FROM materials WHERE id = ?").get(id);
+    event.reply("material-data", material);
+  } catch (err) {
+    console.error("Error fetching material:", err);
+    event.reply("material-data", {});
+  }
+});
+
+// Mengupdate data material
+ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
+  try {
+    db.prepare(
+      "UPDATE materials SET name = ?, unit = ?, price = ?, category = ? WHERE id = ?"
+    ).run(name, unit, price, category, id);
+    event.reply("material-updated", { success: true });
+  } catch (err) {
+    console.error("Error updating material:", err);
+    event.reply("material-updated", { error: err.message });
+  }
+});
