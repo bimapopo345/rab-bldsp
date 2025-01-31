@@ -109,11 +109,11 @@ ipcRenderer.on("ahs-added", (event, response) => {
 // Edit AHS functionality
 function editAhs(id) {
   currentAhsId = id;
-  ipcRenderer.send("get-ahs-by-id", id);
+  ipcRenderer.send("get-ahs-by-id", id); // Send request for specific AHS by ID
 }
 
-// Handle edit AHS modal
-ipcRenderer.on("ahs-data", (event, ahs) => {
+// Handle the AHS data for editing modal
+ipcRenderer.on("ahs-data-for-edit", (event, ahs) => {
   if (ahs && ahs.id === currentAhsId) {
     document.getElementById("editKelompok").value = ahs.kelompok;
     document.getElementById("editKodeAhs").value = ahs.kode_ahs;

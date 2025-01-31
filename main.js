@@ -226,13 +226,8 @@ ipcMain.on("get-ahs", (event) => {
 
 // Get AHS by ID
 ipcMain.on("get-ahs-by-id", (event, id) => {
-  try {
-    const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
-    event.reply("ahs-data", ahs);
-  } catch (err) {
-    console.error("Error fetching AHS by ID:", err);
-    event.reply("ahs-data", {});
-  }
+  const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
+  event.reply("ahs-data-for-edit", ahs); // Send the data back to the renderer
 });
 
 // Add AHS
