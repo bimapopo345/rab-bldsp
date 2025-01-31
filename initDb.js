@@ -71,6 +71,18 @@ function initializeDatabase() {
       );
     `);
 
+  // Create AHS table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ahs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kelompok TEXT NOT NULL,
+      kode_ahs TEXT NOT NULL,
+      ahs TEXT NOT NULL,
+      satuan TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   console.log("Database initialized successfully!");
 }
 

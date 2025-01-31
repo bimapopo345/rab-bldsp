@@ -225,3 +225,49 @@ ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
     event.reply("material-updated", { error: err.message });
   }
 });
+
+// Get all AHS
+ipcMain.on("get-ahs", (event) => {
+  try {
+    const ahs = db.prepare("SELECT * FROM ahs ORDER BY kode_ahs ASC").all();
+    event.reply("ahs-data", ahs);
+  } catch (err) {
+    console.error("Error fetching AHS:", err);
+    event.reply("ahs-data", []);
+  }
+});
+
+// Search AHS
+ipcMain.on("search-ahs", (event, searchTerm) => {
+  try {
+    const ahs = db
+      .prepare("SELECT * FROM ahs WHERE ahs LIKE ? OR kode_ahs LIKE ?")
+      .all(`%${searchTerm}%`, `%${searchTerm}%`);
+    event.reply("ahs-data", ahs);
+  } catch (err) {
+    console.error("Error searching AHS:", err);
+    event.reply("ahs-data", []);
+  }
+});
+
+// Get AHS by ID
+ipcMain.on("get-ahs-by-id", (event, id) => {
+  try {
+    const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
+    event.reply("ahs-data", ahs);
+  } catch (err) {
+    console.error("Error fetching AHS by ID:", err);
+    event.reply("ahs-data", {});
+  }
+});
+
+// Delete AHS
+ipcMain.on("delete-ahs", (event, id) => {
+  try {
+    db.prepare("DELETE FROM ahs WHERE id = ?").run(id);
+    event.reply("ahs-deleted");
+  } catch (err) {
+    console.error("Error deleting AHS:", err);
+    event.reply("ahs-deleted", { error: err.message });
+  }
+});
