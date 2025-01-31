@@ -2,52 +2,57 @@ const { ipcRenderer } = require("electron");
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOMContentLoaded");
   loadMaterials();
-  initializeEventListeners();
+  setupEventListeners();
 });
 
-// Initialize all event listeners
-function initializeEventListeners() {
-  // Search input handler
+// Setup event listeners
+function setupEventListeners() {
+  console.log("Setting up event listeners");
+  // Handle search input
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
-    searchInput.addEventListener("input", searchMaterial);
+    console.log("Found search input");
+    // Clear and focus the input
+    searchInput.value = "";
+    searchInput.focus();
+
+    // Add input event listener
+    searchInput.addEventListener("input", handleSearch);
+
+    // Add focus event listener for debugging
+    searchInput.addEventListener("focus", () =>
+      console.log("Search input focused")
+    );
+    searchInput.addEventListener("blur", () =>
+      console.log("Search input lost focus")
+    );
   }
 
-  // Modal close handlers
-  const modal = document.getElementById("addMaterialModal");
-  const modalContent = modal.querySelector(".modal-content");
+  // Stop propagation for modal content clicks
+  const modalContent = document.querySelector(".modal-content");
+  if (modalContent) {
+    modalContent.addEventListener("click", (e) => e.stopPropagation());
+  }
 
-  // Close modal when clicking outside
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal) {
-      closeModal();
-    }
-  });
-
-  // Prevent modal from closing when clicking inside
-  modalContent.addEventListener("click", (event) => {
-    event.stopPropagation();
-  });
-
-  // Form submission prevention
-  document.addEventListener("keydown", (event) => {
-    if (
-      event.key === "Enter" &&
-      event.target.tagName.toLowerCase() !== "textarea"
-    ) {
-      event.preventDefault();
+  // Handle enter key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.tagName.toLowerCase() !== "textarea") {
+      e.preventDefault();
     }
   });
 }
 
 // Load materials from the database
 function loadMaterials() {
+  console.log("Loading materials");
   ipcRenderer.send("get-materials");
 }
 
 // Handle materials data received from main process
 ipcRenderer.on("materials-data", (event, materials) => {
+  console.log("Received materials data");
   const tableBody = document.getElementById("materialTableBody");
   tableBody.innerHTML = "";
 
@@ -69,56 +74,64 @@ ipcRenderer.on("materials-data", (event, materials) => {
 
   document.getElementById("materialCount").textContent = materials.length;
 
-  // Ensure search input is enabled and focused
+  // Re-enable and focus search input after table update
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     searchInput.disabled = false;
     searchInput.focus();
+    console.log("Focused search input after materials update");
   }
 });
 
-// Search functionality with debounce
-let searchTimeout;
-function searchMaterial(event) {
+// Search functionality
+function handleSearch(event) {
+  console.log("Search input changed");
   const searchInput = event.target;
-  clearTimeout(searchTimeout);
+  const searchTerm = searchInput.value.trim();
 
   // Ensure input is enabled
   searchInput.disabled = false;
 
-  searchTimeout = setTimeout(() => {
-    const searchTerm = searchInput.value.trim();
-    if (searchTerm === "") {
-      loadMaterials(); // Load all materials if search is empty
-    } else {
-      ipcReader.send("search-materials", searchTerm);
-    }
-  }, 300); // Wait 300ms after user stops typing
+  if (searchTerm === "") {
+    loadMaterials();
+  } else {
+    ipcRenderer.send("search-materials", searchTerm);
+  }
 }
 
 // Modal handling
 function addNewMaterial() {
+  console.log("Opening add material modal");
   const modal = document.getElementById("addMaterialModal");
 
-  // Clear and enable form fields
-  const inputs = modal.querySelectorAll("input, select");
-  inputs.forEach((input) => {
-    input.value = "";
-    input.disabled = false;
-  });
-
-  // Set default category
+  // Clear form fields
+  document.getElementById("newName").value = "";
+  document.getElementById("newUnit").value = "";
+  document.getElementById("newPrice").value = "";
   document.getElementById("newCategory").value = "Material";
 
   modal.style.display = "block";
+
+  // Focus first input
+  document.getElementById("newName").focus();
 }
 
 function closeModal() {
+  console.log("Closing modal");
   const modal = document.getElementById("addMaterialModal");
   modal.style.display = "none";
+
+  // Return focus to search
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.disabled = false;
+    searchInput.focus();
+    console.log("Focused search input after closing modal");
+  }
 }
 
 function saveMaterial() {
+  console.log("Saving material");
   const name = document.getElementById("newName").value.trim();
   const unit = document.getElementById("newUnit").value.trim();
   const price = document.getElementById("newPrice").value;
@@ -140,8 +153,13 @@ function saveMaterial() {
 }
 
 // Handle material added successfully
-ipcRenderer.on("material-added", () => {
-  loadMaterials(); // Reload the materials list
+ipcRenderer.on("material-added", (event, response) => {
+  console.log("Material added response received");
+  if (response && response.error) {
+    alert("Error: " + response.error);
+  } else {
+    loadMaterials();
+  }
 });
 
 // Edit material
@@ -153,21 +171,48 @@ function editMaterial(id) {
 // Delete material
 function deleteMaterial(id) {
   if (confirm("Apakah Anda yakin ingin menghapus item ini?")) {
+    console.log("Deleting material:", id);
+    // Store search input value before deletion
+    const searchInput = document.getElementById("searchInput");
+    const searchValue = searchInput ? searchInput.value : "";
+
     ipcRenderer.send("delete-material", id);
+
+    // Re-enable and focus search input immediately
+    if (searchInput) {
+      searchInput.disabled = false;
+      searchInput.value = searchValue;
+      searchInput.focus();
+      console.log("Focused search input after delete");
+    }
   }
 }
 
 // Handle successful deletion
-ipcRenderer.on("material-deleted", () => {
-  loadMaterials(); // Reload the materials list
+ipcRenderer.on("material-deleted", (event, response) => {
+  console.log("Material deleted response received");
+  if (response && response.error) {
+    alert("Error: " + response.error);
+  }
 
-  // Re-enable and focus search input
+  // Re-enable and focus search input before reloading materials
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     searchInput.disabled = false;
     searchInput.focus();
+    console.log("Focused search input before reloading materials");
   }
+
+  loadMaterials();
 });
+
+// Window click handler for modal
+window.onclick = function (event) {
+  const modal = document.getElementById("addMaterialModal");
+  if (event.target === modal) {
+    closeModal();
+  }
+};
 
 // Logout/Exit function
 function logout() {

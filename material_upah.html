@@ -18,6 +18,9 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            min-height: calc(100vh - 40px);
+            box-sizing: border-box;
         }
 
         h1 {
@@ -30,13 +33,29 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
+            gap: 10px;
         }
 
-        input[type="text"] {
+        input[type="text"],
+        input[type="number"],
+        select {
             padding: 10px;
-            width: 70%;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+        }
+
+        .search-bar input[type="text"] {
+            flex: 1;
+            min-width: 0;
         }
 
         button {
@@ -46,6 +65,8 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
         }
 
         button:hover {
@@ -56,6 +77,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            background: white;
         }
 
         table,
@@ -72,43 +94,43 @@
 
         th {
             background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
         }
 
         .logout-btn {
-            background-color: red;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            background-color: #dc3545;
             position: absolute;
             right: 20px;
             top: 20px;
         }
 
         .logout-btn:hover {
-            background-color: #d32f2f;
+            background-color: #c82333;
         }
 
         .back-btn {
-            background-color: #666;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            background-color: #6c757d;
             position: absolute;
             left: 20px;
             top: 20px;
         }
 
         .back-btn:hover {
-            background-color: #555;
+            background-color: #5a6268;
         }
 
         .footer {
             margin-top: 20px;
             text-align: center;
+            color: #666;
         }
 
         /* Modal styles */
@@ -124,28 +146,15 @@
         }
 
         .modal-content {
-            position: relative;
-            background-color: #fefefe;
+            background-color: white;
             margin: 15% auto;
             padding: 20px;
-            border: 1px solid #888;
-            width: 50%;
-            border-radius: 5px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
         }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: black;
-        }
-
-        /* Form styles */
         .form-group {
             margin-bottom: 15px;
         }
@@ -153,14 +162,13 @@
         .form-group label {
             display: block;
             margin-bottom: 5px;
+            font-weight: bold;
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
             box-sizing: border-box;
         }
 
@@ -171,6 +179,43 @@
 
         .modal-buttons button {
             margin-left: 10px;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* Action buttons in table */
+        td button {
+            padding: 6px 12px;
+            margin: 0 4px;
+            font-size: 12px;
+        }
+
+        td button:first-child {
+            background-color: #ffc107;
+        }
+
+        td button:first-child:hover {
+            background-color: #e0a800;
+        }
+
+        td button:last-child {
+            background-color: #dc3545;
+        }
+
+        td button:last-child:hover {
+            background-color: #c82333;
         }
     </style>
 </head>
@@ -183,7 +228,7 @@
         <h1>Daftar Bahan Upah & Alat</h1>
 
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Cari Bahan / Upah / Alat" onkeyup="searchMaterial()">
+            <input type="text" id="searchInput" placeholder="Cari Bahan / Upah / Alat" autocomplete="off">
             <button onclick="addNewMaterial()">+ Baru</button>
         </div>
 
@@ -215,15 +260,15 @@
             <h2>Tambah Material/Upah Baru</h2>
             <div class="form-group">
                 <label for="newName">Nama:</label>
-                <input type="text" id="newName" required>
+                <input type="text" id="newName" required autocomplete="off">
             </div>
             <div class="form-group">
                 <label for="newUnit">Satuan:</label>
-                <input type="text" id="newUnit" required>
+                <input type="text" id="newUnit" required autocomplete="off">
             </div>
             <div class="form-group">
                 <label for="newPrice">Harga:</label>
-                <input type="number" id="newPrice" required>
+                <input type="number" id="newPrice" required autocomplete="off">
             </div>
             <div class="form-group">
                 <label for="newCategory">Kategori:</label>
@@ -235,7 +280,7 @@
             </div>
             <div class="modal-buttons">
                 <button onclick="closeModal()">Batal</button>
-                <button onclick="saveMaterial()" style="background-color: #4CAF50;">Simpan</button>
+                <button onclick="saveMaterial()">Simpan</button>
             </div>
         </div>
     </div>

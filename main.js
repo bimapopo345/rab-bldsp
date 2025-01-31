@@ -77,28 +77,44 @@ function initDatabase() {
 }
 
 function createWindow() {
+  if (mainWindow) {
+    if (mainWindow.isDestroyed()) {
+      mainWindow = null;
+    } else {
+      mainWindow.focus();
+      return;
+    }
+  }
+
   mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false,
     },
+    show: false,
   });
 
   mainWindow.loadFile("login.html");
-  initDatabase();
 
-  // Handle window close
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+
+  initDatabase();
 }
 
-// Handle app ready
+// This method will be called when Electron has finished initialization
 app.whenReady().then(createWindow);
 
-// Handle all windows closed
+// Quit when all windows are closed.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     if (db) {
@@ -112,23 +128,8 @@ app.on("window-all-closed", () => {
   }
 });
 
-// Handle app activation
 app.on("activate", () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
-});
-
-// Handle process termination
-process.on("SIGINT", () => {
-  if (db) {
-    try {
-      db.close();
-    } catch (err) {
-      console.error("Error closing database:", err);
-    }
-  }
-  app.quit();
+  createWindow();
 });
 
 // Login handler
@@ -197,5 +198,37 @@ ipcMain.on("delete-material", (event, id) => {
   } catch (err) {
     console.error("Error deleting material:", err);
     event.reply("material-deleted", { error: err.message });
+  }
+});
+
+// Handle graceful shutdown
+process.on("exit", () => {
+  if (db) {
+    try {
+      db.close();
+    } catch (err) {
+      console.error("Error closing database:", err);
+    }
+  }
+});
+
+process.on("SIGINT", () => {
+  if (db) {
+    try {
+      db.close();
+    } catch (err) {
+      console.error("Error closing database:", err);
+    }
+  }
+  app.quit();
+});
+
+app.on("before-quit", () => {
+  if (db) {
+    try {
+      db.close();
+    } catch (err) {
+      console.error("Error closing database:", err);
+    }
   }
 });
