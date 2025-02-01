@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rincian AHS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e4e4e4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            min-height: calc(100vh - 40px);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="back-btn" onclick="goBack()">Kembali</button>
+
+    <div class="container">
+        <h1>Rincian AHS</h1>
+        <div class="form-group">
+            <label for="analisa-nama">Nama Analisa Harga Satuan Pekerjaan:</label>
+            <input type="text" id="analisa-nama" placeholder="Klik untuk cari Analisa Harga Satuan Pekerjaan / ALT + P"
+                onclick="openAhsModal()">
+        </div>
+        <div class="form-group">
+            <label for="kelompok-pekerjaan">Kelompok Pekerjaan:</label>
+            <input type="text" id="kelompok-pekerjaan" disabled>
+        </div>
+        <div class="form-group">
+            <label for="satuan">Satuan:</label>
+            <input type="text" id="satuan" disabled>
+        </div>
+    </div>
+
+    <!-- Modal for searching and selecting AHS -->
+    <div id="searchAhsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSearchAhsModal()">&times;</span>
+            <h2>Cari AHS</h2>
+            <input type="text" id="searchAhsInput" placeholder="Cari AHS..." oninput="searchAhs()">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kelompok</th>
+                        <th>Kode AHS</th>
+                        <th>AHS</th>
+                        <th>Satuan</th>
+                    </tr>
+                </thead>
+                <tbody id="ahsSearchResults"></tbody>
+            </table>
+            <div class="modal-buttons">
+                <button onclick="closeSearchAhsModal()">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="rincian_ahs_renderer.js"></script>
+</body>
+
+</html>

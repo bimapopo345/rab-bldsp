@@ -236,9 +236,15 @@ ipcMain.on("get-ahs", (event) => {
 });
 
 // Get AHS by ID
+// Get AHS data by ID for autofill
 ipcMain.on("get-ahs-by-id", (event, id) => {
-  const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
-  event.reply("ahs-data-for-edit", ahs); // Send the data back to the renderer
+  try {
+    const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
+    event.reply("ahs-data-for-edit", ahs); // Send AHS data back
+  } catch (err) {
+    console.error("Error fetching AHS by ID:", err);
+    event.reply("ahs-data-for-edit", null);
+  }
 });
 
 // Add AHS
