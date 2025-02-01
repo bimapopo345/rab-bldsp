@@ -46,6 +46,54 @@
             box-sizing: border-box;
         }
 
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Button styling */
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
         /* Modal styles */
         .modal {
             display: none;
@@ -111,6 +159,29 @@
             <label for="satuan">Satuan:</label>
             <input type="text" id="satuan" disabled>
         </div>
+
+        <!-- Table for material details -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Kategori</th>
+                    <th>Deskripsi</th>
+                    <th>Satuan</th>
+                    <th>Hrg Satuan</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="materialDetails">
+                <!-- Dynamic rows will be populated here -->
+            </tbody>
+        </table>
+
+        <!-- Action buttons -->
+        <div class="footer">
+            <button onclick="deleteMaterial()">Hapus</button>
+            <button onclick="editKoefisien()">Edit Koefisien</button>
+            <button onclick="addBahanUpah()">+ Bahan/Upah</button>
+        </div>
     </div>
 
     <!-- Modal for searching and selecting AHS -->
@@ -135,8 +206,8 @@
             </div>
         </div>
     </div>
-
-    <script src="rincian_ahs_renderer.js"></script>
 </body>
+
+<script src="rincian_ahs_renderer.js"></script>
 
 </html>
