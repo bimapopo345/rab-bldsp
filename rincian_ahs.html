@@ -211,7 +211,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeSearchMaterialModal()">&times;</span>
             <h2>Cari Bahan/Upah/Alat</h2>
-            <input type="text" id="searchMaterialInput" placeholder="Cari Bahan/Upah/Alat..."
+            <input type="text" id="searchMaterialInput" placeholder="Cari Bahan/Upah/Alat... "
                 oninput="searchMaterial()">
             <table>
                 <thead>
@@ -228,6 +228,17 @@
             <div class="modal-buttons">
                 <button onclick="closeSearchMaterialModal()">Batal</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Input for Koefisien inside the modal -->
+    <div id="koefisienInputModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeKoefisienModal()">&times;</span>
+            <h2>Masukkan Koefisien</h2>
+            <label for="koefisien">Koefisien:</label>
+            <input type="number" id="koefisien" value="1" step="any">
+            <button onclick="addMaterialToTable()">Tambah</button>
         </div>
     </div>
 </body>

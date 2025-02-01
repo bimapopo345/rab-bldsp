@@ -129,7 +129,7 @@ ipcRenderer.on("materials-data", (event, materials) => {
 function selectMaterial(id, name, price) {
   document.getElementById("selectedMaterialName").innerText = name; // Show selected material name
   document.getElementById("selectedMaterialPrice").innerText = `Rp ${price}`; // Show selected material price
-  document.getElementById("koefisien").value = 1; // Default koefisien value
+  document.getElementById("koefisienInputModal").style.display = "block"; // Show koefisien input modal
   closeSearchMaterialModal(); // Close the modal after selection
 }
 
@@ -152,12 +152,18 @@ function addMaterialToTable() {
   const tableBody = document.getElementById("materialDetails");
   const row = document.createElement("tr");
   row.innerHTML = `
-        <td>Bahan</td>
-        <td>${name}</td>
-        <td>kg</td> <!-- Assuming unit is kg; adjust if necessary -->
-        <td>${koefisien}</td>
-        <td>Rp ${price}</td>
-        <td>Rp ${total}</td>
-    `;
+          <td>Bahan</td>
+          <td>${name}</td>
+          <td>kg</td> <!-- Assuming unit is kg; adjust if necessary -->
+          <td>${koefisien}</td>
+          <td>Rp ${price}</td>
+          <td>Rp ${total}</td>
+      `;
   tableBody.appendChild(row);
+  closeKoefisienModal(); // Close the modal after adding material
+}
+
+function closeKoefisienModal() {
+  const modal = document.getElementById("koefisienInputModal");
+  modal.style.display = "none"; // Close the koefisien input modal
 }
