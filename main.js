@@ -342,3 +342,17 @@ ipcMain.on("search-ahs", (event, searchTerm) => {
     event.reply("ahs-data", []);
   }
 });
+
+// Sorting Materials
+ipcMain.on("sort-materials", (event, { column, direction }) => {
+  try {
+    const query = `SELECT * FROM materials ORDER BY ${column} ${
+      direction === "asc" ? "ASC" : "DESC"
+    }`;
+    const materials = db.prepare(query).all();
+    event.reply("sorted-materials", materials);
+  } catch (err) {
+    console.error("Error sorting materials:", err);
+    event.reply("sorted-materials", []);
+  }
+});

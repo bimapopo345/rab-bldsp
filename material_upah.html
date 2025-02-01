@@ -239,14 +239,15 @@
         <table>
             <thead>
                 <tr>
-                    <th>Nama</th>
-                    <th>Satuan</th>
-                    <th>Harga</th>
-                    <th>Kategori</th>
-                    <th>Update Terakhir</th>
+                    <th onclick="sortTable('name')">Nama</th>
+                    <th onclick="sortTable('unit')">Satuan</th>
+                    <th onclick="sortTable('price')">Harga</th>
+                    <th onclick="sortTable('category')">Kategori</th>
+                    <th onclick="sortTable('created_at')">Update Terakhir</th>
                     <th>Actions</th>
                 </tr>
             </thead>
+
             <tbody id="materialTableBody">
                 <!-- Data rows will be populated here -->
             </tbody>

@@ -1,6 +1,42 @@
 const { ipcRenderer } = require("electron");
 
 let currentMaterialId = null;
+let sortOrder = {
+  name: "asc",
+  unit: "asc",
+  price: "asc",
+  category: "asc",
+  created_at: "asc",
+};
+
+function sortTable(column) {
+  const direction = sortOrder[column] === "asc" ? "desc" : "asc";
+  sortOrder[column] = direction;
+  ipcRenderer.send("sort-materials", { column, direction });
+}
+
+ipcRenderer.on("sorted-materials", (event, materials) => {
+  const tableBody = document.getElementById("materialTableBody");
+  tableBody.innerHTML = "";
+
+  materials.forEach((material) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${material.name}</td>
+      <td>${material.unit}</td>
+      <td>Rp ${material.price.toLocaleString()}</td>
+      <td>${material.category}</td>
+      <td>${new Date(material.created_at).toLocaleDateString()}</td>
+      <td>
+        <button onclick="editMaterial(${material.id})">Edit</button>
+        <button onclick="deleteMaterial(${material.id})">Hapus</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  document.getElementById("materialCount").textContent = materials.length;
+});
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
