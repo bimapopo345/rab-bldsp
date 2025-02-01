@@ -1,5 +1,8 @@
 const { ipcRenderer } = require("electron");
 
+let selectedMaterialId = null; // Store selected material ID
+let selectedAhsId = 1; // Example AHS ID (use your logic to set this)
+
 // Open the search modal
 function openAhsModal() {
   const modal = document.getElementById("searchAhsModal");
@@ -96,7 +99,7 @@ function searchMaterial() {
     .getElementById("searchMaterialInput")
     .value.trim()
     .toLowerCase();
-  ipcRenderer.send("search-materials", searchInput); // Send the search term to the backend
+  ipcRenderer.send("search-materials", searchInput); // Send search term to backend
 }
 
 ipcRenderer.on("materials-data", (event, materials) => {
@@ -116,21 +119,23 @@ ipcRenderer.on("materials-data", (event, materials) => {
   filteredMaterials.forEach((material) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>${material.name}</td>
-            <td>${material.unit}</td>
-            <td>Rp ${material.price}</td>
-            <td>${material.category}</td>
-            <td><button onclick="selectMaterial(${material.id}, '${material.name}', ${material.price})">Pilih</button></td>
-        `;
+        <td>${material.name}</td>
+        <td>${material.unit}</td>
+        <td>Rp ${material.price}</td>
+        <td>${material.category}</td>
+        <td><button onclick="selectMaterial(${material.id}, '${material.name}', ${material.price})">Pilih</button></td>
+      `;
     tableBody.appendChild(row);
   });
 });
 
+// Select a material and display its details for further actions
 function selectMaterial(id, name, price) {
-  document.getElementById("selectedMaterialName").innerText = name; // Show selected material name
-  document.getElementById("selectedMaterialPrice").innerText = `Rp ${price}`; // Show selected material price
-  document.getElementById("koefisienInputModal").style.display = "block"; // Show koefisien input modal
-  closeSearchMaterialModal(); // Close the modal after selection
+  selectedMaterialId = id;
+  document.getElementById("selectedMaterialName").innerText = name;
+  document.getElementById("selectedMaterialPrice").innerText = `Rp ${price}`;
+  document.getElementById("koefisienInputModal").style.display = "block"; // Show coefficient input modal
+  closeSearchMaterialModal(); // Close material search modal
 }
 
 function addMaterialToTable() {
@@ -147,32 +152,37 @@ function addMaterialToTable() {
     return;
   }
 
-  const total = price * koefisien; // Hitung total harga berdasarkan koefisien
+  const total = price * koefisien; // Calculate the total price based on coefficient
 
-  // Kirim data ke backend untuk disimpan di tabel pricing
-  ipcRenderer.send("add-pricing", {
-    ahs_id: selectedAhsId, // Pastikan kamu menyertakan ID AHS yang dipilih
-    material_id: selectedMaterialId, // Pastikan ID material dipilih
-    quantity: koefisien, // Kirim quantity berdasarkan koefisien
-    koefisien: koefisien, // Kirim nilai koefisien
-  });
-
-  // Tambahkan ke dalam tabel untuk tampilan
   const tableBody = document.getElementById("materialDetails");
   const row = document.createElement("tr");
   row.innerHTML = `
-        <td>Bahan</td>
-        <td>${name}</td>
-        <td>kg</td> <!-- Satuan tetap kg, bisa disesuaikan -->
-        <td>${koefisien}</td>
-        <td>Rp ${price}</td>
-        <td>Rp ${total}</td>
-      `;
+      <td>Bahan</td>
+      <td>${name}</td>
+      <td>kg</td> <!-- Satuan tetap kg, bisa disesuaikan -->
+      <td>${koefisien}</td>
+      <td>Rp ${price}</td>
+      <td>Rp ${total}</td>
+    `;
   tableBody.appendChild(row);
-  closeKoefisienModal(); // Tutup modal setelah material ditambahkan
+
+  // Send data to backend to save in pricing table
+  ipcRenderer.send("add-pricing", {
+    ahs_id: selectedAhsId,
+    material_id: selectedMaterialId,
+    quantity: koefisien,
+    koefisien: koefisien,
+  });
+
+  closeKoefisienModal(); // Close coefficient modal
 }
 
+// Close the coefficient input modal
 function closeKoefisienModal() {
-  const modal = document.getElementById("koefisienInputModal");
-  modal.style.display = "none"; // Close the koefisien input modal
+  document.getElementById("koefisienInputModal").style.display = "none";
+}
+
+// Close the material search modal
+function closeSearchMaterialModal() {
+  document.getElementById("searchMaterialModal").style.display = "none";
 }
