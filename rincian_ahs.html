@@ -206,6 +206,30 @@
             </div>
         </div>
     </div>
+    <!-- Modal for Searching Bahan/Upah -->
+    <div id="searchMaterialModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSearchMaterialModal()">&times;</span>
+            <h2>Cari Bahan/Upah/Alat</h2>
+            <input type="text" id="searchMaterialInput" placeholder="Cari Bahan/Upah/Alat..."
+                oninput="searchMaterial()">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Satuan</th>
+                        <th>Harga</th>
+                        <th>Kategori</th>
+                        <th>Pilih</th>
+                    </tr>
+                </thead>
+                <tbody id="materialSearchResults"></tbody>
+            </table>
+            <div class="modal-buttons">
+                <button onclick="closeSearchMaterialModal()">Batal</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 <script src="rincian_ahs_renderer.js"></script>

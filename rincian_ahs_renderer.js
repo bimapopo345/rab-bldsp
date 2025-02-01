@@ -75,3 +75,89 @@ ipcRenderer.on("ahs-data-for-edit", (event, ahs) => {
 function goBack() {
   window.location.href = "index.html"; // Navigate to the main page
 }
+
+function addBahanUpah() {
+  const modal = document.getElementById("searchMaterialModal");
+  modal.style.display = "block"; // Open the modal
+  loadMaterials(); // Fetch materials when modal opens
+}
+
+function closeSearchMaterialModal() {
+  const modal = document.getElementById("searchMaterialModal");
+  modal.style.display = "none"; // Close the modal
+}
+
+function loadMaterials() {
+  ipcRenderer.send("get-materials"); // Fetch materials from the backend
+}
+
+function searchMaterial() {
+  const searchInput = document
+    .getElementById("searchMaterialInput")
+    .value.trim()
+    .toLowerCase();
+  ipcRenderer.send("search-materials", searchInput); // Send the search term to the backend
+}
+
+ipcRenderer.on("materials-data", (event, materials) => {
+  const searchInput = document
+    .getElementById("searchMaterialInput")
+    .value.trim()
+    .toLowerCase();
+  const filteredMaterials = materials.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchInput) ||
+      item.category.toLowerCase().includes(searchInput)
+  );
+
+  const tableBody = document.getElementById("materialSearchResults");
+  tableBody.innerHTML = "";
+
+  filteredMaterials.forEach((material) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+            <td>${material.name}</td>
+            <td>${material.unit}</td>
+            <td>Rp ${material.price}</td>
+            <td>${material.category}</td>
+            <td><button onclick="selectMaterial(${material.id}, '${material.name}', ${material.price})">Pilih</button></td>
+        `;
+    tableBody.appendChild(row);
+  });
+});
+
+function selectMaterial(id, name, price) {
+  document.getElementById("selectedMaterialName").innerText = name; // Show selected material name
+  document.getElementById("selectedMaterialPrice").innerText = `Rp ${price}`; // Show selected material price
+  document.getElementById("koefisien").value = 1; // Default koefisien value
+  closeSearchMaterialModal(); // Close the modal after selection
+}
+
+function addMaterialToTable() {
+  const name = document.getElementById("selectedMaterialName").innerText;
+  const price = parseFloat(
+    document
+      .getElementById("selectedMaterialPrice")
+      .innerText.replace("Rp ", "")
+  );
+  const koefisien = parseFloat(document.getElementById("koefisien").value);
+
+  if (!name || !koefisien) {
+    alert("Pilih bahan dan masukkan koefisien.");
+    return;
+  }
+
+  const total = price * koefisien; // Calculate the total
+
+  const tableBody = document.getElementById("materialDetails");
+  const row = document.createElement("tr");
+  row.innerHTML = `
+        <td>Bahan</td>
+        <td>${name}</td>
+        <td>kg</td> <!-- Assuming unit is kg; adjust if necessary -->
+        <td>${koefisien}</td>
+        <td>Rp ${price}</td>
+        <td>Rp ${total}</td>
+    `;
+  tableBody.appendChild(row);
+}
