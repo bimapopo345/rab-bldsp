@@ -76,6 +76,9 @@ ipcRenderer.on("materials-data", (event, materials) => {
       `;
     tableBody.appendChild(row);
   });
+
+  // Update total count
+  document.getElementById("materialCount").textContent = materials.length; // Update total count
 });
 
 ipcRenderer.on("material-updated", (event, response) => {
@@ -161,11 +164,12 @@ function saveMaterial() {
 }
 
 // Handle material added successfully
+// Handle material added successfully
 ipcRenderer.on("material-added", (event, response) => {
   if (response && response.error) {
     alert("Error: " + response.error);
   } else {
-    loadMaterials();
+    loadMaterials(); // Reload data material setelah update
   }
 });
 
