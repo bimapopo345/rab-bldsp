@@ -41,6 +41,18 @@ function initDatabase() {
       )
     `);
 
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS pricing (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ahs_id INTEGER NOT NULL,
+        material_id INTEGER NOT NULL,
+        quantity REAL NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (ahs_id) REFERENCES ahs(id),
+        FOREIGN KEY (material_id) REFERENCES materials(id)
+      )
+    `);
+
     const adminExists = db
       .prepare("SELECT * FROM admin WHERE username = ?")
       .get("admin");
@@ -213,7 +225,6 @@ ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
 });
 
 // Get all AHS
-// Get all AHS
 ipcMain.on("get-ahs", (event) => {
   try {
     const ahs = db.prepare("SELECT * FROM ahs ORDER BY kode_ahs ASC").all();
@@ -272,5 +283,62 @@ ipcMain.on("delete-ahs", (event, id) => {
   } catch (err) {
     console.error("Error deleting AHS:", err);
     event.reply("ahs-deleted", { error: err.message });
+  }
+});
+
+// Add pricing calculation handlers
+ipcMain.on("add-pricing", (event, { ahs_id, material_id, quantity }) => {
+  try {
+    const stmt = db.prepare(
+      "INSERT INTO pricing (ahs_id, material_id, quantity) VALUES (?, ?, ?)"
+    );
+    stmt.run(ahs_id, material_id, quantity);
+    event.reply("pricing-added");
+  } catch (err) {
+    console.error("Error adding pricing:", err);
+    event.reply("pricing-added", { error: err.message });
+  }
+});
+
+ipcMain.on("get-pricing", (event, ahs_id) => {
+  try {
+    const pricing = db
+      .prepare(
+        `
+      SELECT p.*, m.name, m.unit, m.price 
+      FROM pricing p
+      JOIN materials m ON p.material_id = m.id
+      WHERE p.ahs_id = ?
+    `
+      )
+      .all(ahs_id);
+    event.reply("pricing-data", pricing);
+  } catch (err) {
+    console.error("Error fetching pricing:", err);
+    event.reply("pricing-data", []);
+  }
+});
+
+ipcMain.on("delete-pricing", (event, id) => {
+  try {
+    db.prepare("DELETE FROM pricing WHERE id = ?").run(id);
+    event.reply("pricing-deleted");
+  } catch (err) {
+    console.error("Error deleting pricing:", err);
+    event.reply("pricing-deleted", { error: err.message });
+  }
+});
+
+// Handle search for AHS based on kelompok and ahs name
+ipcMain.on("search-ahs", (event, searchTerm) => {
+  try {
+    const query = "%" + searchTerm + "%";
+    const results = db
+      .prepare("SELECT * FROM ahs WHERE kelompok LIKE ? OR ahs LIKE ?")
+      .all(query, query);
+    event.reply("ahs-data", results);
+  } catch (err) {
+    console.error("Error searching AHS:", err);
+    event.reply("ahs-data", []);
   }
 });

@@ -17,9 +17,9 @@ function initializeSearchInput() {
       searchInput.addEventListener("input", (event) => {
         const searchTerm = event.target.value.trim();
         if (searchTerm === "") {
-          loadMaterials();
+          loadMaterials(); // Load all materials if the search is cleared
         } else {
-          ipcRenderer.send("search-materials", searchTerm);
+          ipcRenderer.send("search-materials", searchTerm); // Send search term to backend
         }
       });
       searchInput.setAttribute("data-has-handler", "true");

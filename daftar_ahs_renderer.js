@@ -12,14 +12,13 @@ document.addEventListener("DOMContentLoaded", () => {
 function initializeSearchInput() {
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
-    // Add input event listener once
     if (!searchInput.hasAttribute("data-has-handler")) {
       searchInput.addEventListener("input", (event) => {
         const searchTerm = event.target.value.trim();
         if (searchTerm === "") {
-          loadAhs();
+          loadAhs(); // Load all AHS if search is cleared
         } else {
-          ipcRenderer.send("search-ahs", searchTerm);
+          ipcRenderer.send("search-ahs", searchTerm); // Send search term to the main process
         }
       });
       searchInput.setAttribute("data-has-handler", "true");
@@ -34,25 +33,35 @@ function loadAhs() {
 
 // Handle AHS data received from main process
 ipcRenderer.on("ahs-data", (event, ahs) => {
+  const searchTerm = document
+    .getElementById("searchInput")
+    .value.trim()
+    .toLowerCase();
+  const filteredAhs = ahs.filter(
+    (item) =>
+      item.kelompok.toLowerCase().includes(searchTerm) ||
+      item.ahs.toLowerCase().includes(searchTerm)
+  );
+
   const tableBody = document.getElementById("ahsTableBody");
   tableBody.innerHTML = "";
 
-  ahs.forEach((item) => {
+  filteredAhs.forEach((item) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>${item.kelompok}</td>
-            <td>${item.kode_ahs}</td>
-            <td>${item.ahs}</td>
-            <td>${item.satuan}</td>
-            <td>
-                <button onclick="editAhs(${item.id})">Edit</button>
-                <button onclick="deleteAhs(${item.id})">Hapus</button>
-            </td>
-        `;
+      <td>${item.kelompok}</td>
+      <td>${item.kode_ahs}</td>
+      <td>${item.ahs}</td>
+      <td>${item.satuan}</td>
+      <td>
+        <button onclick="editAhs(${item.id})">Edit</button>
+        <button onclick="deleteAhs(${item.id})">Hapus</button>
+      </td>
+    `;
     tableBody.appendChild(row);
   });
 
-  document.getElementById("ahsCount").textContent = ahs.length;
+  document.getElementById("ahsCount").textContent = filteredAhs.length;
 });
 
 // Add new AHS
