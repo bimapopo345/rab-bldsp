@@ -161,6 +161,19 @@
         td button:last-child:hover {
             background-color: #c82333;
         }
+
+        /* Koefisien Input Styling */
+        .koefisien-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .koefisien-container input {
+            margin-right: 10px;
+            padding: 8px;
+            width: 100px;
+        }
     </style>
 </head>
 
@@ -250,20 +263,17 @@
             </table>
             <div class="modal-buttons">
                 <button onclick="closeSearchMaterialModal()">Batal</button>
+                <!-- Koefisien Input here -->
+                <div class="koefisien-container">
+                    <label for="koefisien">Koefisien:</label>
+                    <input type="number" id="koefisien" value="1" step="any">
+                    <button onclick="addMaterialToTable()">Tambah</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Input for Koefisien inside the modal -->
-    <div id="koefisienInputModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeKoefisienModal()">&times;</span>
-            <h2>Masukkan Koefisien</h2>
-            <label for="koefisien">Koefisien:</label>
-            <input type="number" id="koefisien" value="1" step="any">
-            <button onclick="addMaterialToTable()">Tambah</button>
-        </div>
-    </div>
 </body>
 
 <script src="rincian_ahs_renderer.js"></script>
