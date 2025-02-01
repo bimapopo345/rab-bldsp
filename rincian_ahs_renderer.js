@@ -147,20 +147,29 @@ function addMaterialToTable() {
     return;
   }
 
-  const total = price * koefisien; // Calculate the total
+  const total = price * koefisien; // Hitung total harga berdasarkan koefisien
 
+  // Kirim data ke backend untuk disimpan di tabel pricing
+  ipcRenderer.send("add-pricing", {
+    ahs_id: selectedAhsId, // Pastikan kamu menyertakan ID AHS yang dipilih
+    material_id: selectedMaterialId, // Pastikan ID material dipilih
+    quantity: koefisien, // Kirim quantity berdasarkan koefisien
+    koefisien: koefisien, // Kirim nilai koefisien
+  });
+
+  // Tambahkan ke dalam tabel untuk tampilan
   const tableBody = document.getElementById("materialDetails");
   const row = document.createElement("tr");
   row.innerHTML = `
-          <td>Bahan</td>
-          <td>${name}</td>
-          <td>kg</td> <!-- Assuming unit is kg; adjust if necessary -->
-          <td>${koefisien}</td>
-          <td>Rp ${price}</td>
-          <td>Rp ${total}</td>
+        <td>Bahan</td>
+        <td>${name}</td>
+        <td>kg</td> <!-- Satuan tetap kg, bisa disesuaikan -->
+        <td>${koefisien}</td>
+        <td>Rp ${price}</td>
+        <td>Rp ${total}</td>
       `;
   tableBody.appendChild(row);
-  closeKoefisienModal(); // Close the modal after adding material
+  closeKoefisienModal(); // Tutup modal setelah material ditambahkan
 }
 
 function closeKoefisienModal() {

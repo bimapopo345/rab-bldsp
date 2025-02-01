@@ -7,8 +7,19 @@ const db = new Database("database.sqlite", { verbose: console.log });
 // Create tables
 function initializeDatabase() {
   // Menghapus tabel yang tidak diperlukan
-  db.exec("DROP TABLE IF EXISTS projects;");
-  db.exec("DROP TABLE IF EXISTS cost_estimates;");
+  // Menambahkan kolom koefisien pada tabel pricing
+  db.exec(`
+  CREATE TABLE IF NOT EXISTS pricing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ahs_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    quantity REAL NOT NULL,
+    koefisien REAL NOT NULL,  -- Kolom baru untuk koefisien
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ahs_id) REFERENCES ahs(id),
+    FOREIGN KEY (material_id) REFERENCES materials(id)
+  )
+`);
 
   // Create AHS table
   db.exec(`

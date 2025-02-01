@@ -41,17 +41,19 @@ function initDatabase() {
       )
     `);
 
+    // Pastikan kolom koefisien ada di dalam tabel pricing
     db.exec(`
-      CREATE TABLE IF NOT EXISTS pricing (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ahs_id INTEGER NOT NULL,
-        material_id INTEGER NOT NULL,
-        quantity REAL NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (ahs_id) REFERENCES ahs(id),
-        FOREIGN KEY (material_id) REFERENCES materials(id)
-      )
-    `);
+  CREATE TABLE IF NOT EXISTS pricing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ahs_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    quantity REAL NOT NULL,
+    koefisien REAL NOT NULL,  -- Kolom koefisien yang baru
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ahs_id) REFERENCES ahs(id),
+    FOREIGN KEY (material_id) REFERENCES materials(id)
+  )
+`);
 
     const adminExists = db
       .prepare("SELECT * FROM admin WHERE username = ?")
@@ -293,18 +295,22 @@ ipcMain.on("delete-ahs", (event, id) => {
 });
 
 // Add pricing calculation handlers
-ipcMain.on("add-pricing", (event, { ahs_id, material_id, quantity }) => {
-  try {
-    const stmt = db.prepare(
-      "INSERT INTO pricing (ahs_id, material_id, quantity) VALUES (?, ?, ?)"
-    );
-    stmt.run(ahs_id, material_id, quantity);
-    event.reply("pricing-added");
-  } catch (err) {
-    console.error("Error adding pricing:", err);
-    event.reply("pricing-added", { error: err.message });
+// Menambahkan pricing dengan koefisien
+ipcMain.on(
+  "add-pricing",
+  (event, { ahs_id, material_id, quantity, koefisien }) => {
+    try {
+      const stmt = db.prepare(
+        "INSERT INTO pricing (ahs_id, material_id, quantity, koefisien) VALUES (?, ?, ?, ?)"
+      );
+      stmt.run(ahs_id, material_id, quantity, koefisien); // Menyimpan koefisien
+      event.reply("pricing-added");
+    } catch (err) {
+      console.error("Error adding pricing:", err);
+      event.reply("pricing-added", { error: err.message });
+    }
   }
-});
+);
 
 ipcMain.on("get-pricing", (event, ahs_id) => {
   try {
