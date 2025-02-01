@@ -356,3 +356,17 @@ ipcMain.on("sort-materials", (event, { column, direction }) => {
     event.reply("sorted-materials", []);
   }
 });
+
+// Sorting AHS
+ipcMain.on("sort-ahs", (event, { column, direction }) => {
+  try {
+    const query = `SELECT * FROM ahs ORDER BY ${column} ${
+      direction === "asc" ? "ASC" : "DESC"
+    }`;
+    const ahs = db.prepare(query).all();
+    event.reply("sorted-ahs", ahs);
+  } catch (err) {
+    console.error("Error sorting AHS:", err);
+    event.reply("sorted-ahs", []);
+  }
+});

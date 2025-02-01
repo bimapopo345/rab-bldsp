@@ -173,13 +173,14 @@
         <table>
             <thead>
                 <tr>
-                    <th>KELOMPOK</th>
-                    <th>Kode AHS</th>
-                    <th>AHS</th>
-                    <th>Satuan</th>
+                    <th onclick="sortTable('kelompok')">KELOMPOK</th>
+                    <th onclick="sortTable('kode_ahs')">Kode AHS</th>
+                    <th onclick="sortTable('ahs')">AHS</th>
+                    <th onclick="sortTable('satuan')">Satuan</th>
                     <th>Actions</th>
                 </tr>
             </thead>
+
             <tbody id="ahsTableBody">
                 <!-- Data rows will be populated here -->
             </tbody>

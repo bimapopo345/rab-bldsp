@@ -1,6 +1,40 @@
 const { ipcRenderer } = require("electron");
 
 let currentAhsId = null;
+let sortOrder = {
+  kelompok: "asc",
+  kode_ahs: "asc",
+  ahs: "asc",
+  satuan: "asc",
+};
+
+function sortTable(column) {
+  const direction = sortOrder[column] === "asc" ? "desc" : "asc";
+  sortOrder[column] = direction;
+  ipcRenderer.send("sort-ahs", { column, direction });
+}
+
+ipcRenderer.on("sorted-ahs", (event, ahs) => {
+  const tableBody = document.getElementById("ahsTableBody");
+  tableBody.innerHTML = "";
+
+  ahs.forEach((item) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${item.kelompok}</td>
+      <td>${item.kode_ahs}</td>
+      <td>${item.ahs}</td>
+      <td>${item.satuan}</td>
+      <td>
+        <button onclick="editAhs(${item.id})">Edit</button>
+        <button onclick="deleteAhs(${item.id})">Hapus</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  document.getElementById("ahsCount").textContent = ahs.length;
+});
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
