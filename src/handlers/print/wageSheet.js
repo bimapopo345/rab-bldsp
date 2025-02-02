@@ -30,8 +30,44 @@ async function addDetailedWageSheet(workbook, db) {
     titleCell.alignment = { horizontal: "center", vertical: "middle" };
     sheet.getRow(1).height = 30;
 
+    // Add column labels (A-H)
+    const labelRow = sheet.getRow(2);
+    const labels = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    labels.forEach((label, idx) => {
+      labelRow.getCell(idx + 1).value = label;
+    });
+    labelRow.height = 20;
+    labelRow.eachCell((cell) => {
+      Object.assign(cell, STYLES.header);
+      cell.border = BORDERS;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.font = { ...cell.font, bold: true };
+    });
+
+    // Add category headers without merging
+    const categoryRow = sheet.getRow(3);
+    const categories = [
+      "Informasi AHS", // A
+      "Informasi AHS", // B
+      "Informasi Tenaga Kerja", // C
+      "Informasi Tenaga Kerja", // D
+      "Informasi Harga", // E
+      "Informasi Harga", // F
+      "Informasi Harga", // G
+      "Informasi Harga", // H
+    ];
+    categories.forEach((category, idx) => {
+      categoryRow.getCell(idx + 1).value = category;
+    });
+    categoryRow.height = 25;
+    categoryRow.eachCell((cell) => {
+      Object.assign(cell, STYLES.header);
+      cell.border = BORDERS;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    });
+
     // Style header row
-    const headerRow = sheet.getRow(2);
+    const headerRow = sheet.getRow(4);
     headerRow.height = 25;
     headerRow.eachCell((cell) => {
       Object.assign(cell, STYLES.header);
@@ -61,7 +97,7 @@ async function addDetailedWageSheet(workbook, db) {
         return;
       }
 
-      let currentRow = 3;
+      let currentRow = 5;
       let currentKelompok = "";
       let kelompokTotal = 0;
       let grandTotal = 0;
