@@ -217,6 +217,30 @@
             vertical-align: middle;
         }
 
+        .auth-links {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .auth-links a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: var(--secondary);
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
         @media (max-width: 480px) {
             .login-container {
                 margin: 20px;
@@ -229,20 +253,64 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <!-- Engineering/Construction icon -->
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M21 20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3H20C20.5523 3 21 3.44772 21 4V20ZM19 19V5H5V19H19ZM12 7V17H7V7H12ZM17 7V17H14V7H17Z" />
             </svg>
         </div>
-        <h2>Login Admin</h2>
-        <div class="input-group">
-            <input type="text" id="username" placeholder="Username" autocomplete="off">
+
+        <!-- Login Form -->
+        <div id="loginForm" class="form-container active">
+            <h2>Login Sistem RAB</h2>
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password">
+            </div>
+            <button onclick="attemptLogin()">Masuk</button>
+            <div class="auth-links">
+                <a href="#" onclick="showResetForm()">Lupa Password?</a>
+                <a href="#" onclick="showRegisterForm()">Daftar</a>
+            </div>
         </div>
-        <div class="input-group">
-            <input type="password" id="password" placeholder="Password">
+
+        <!-- Register Form -->
+        <div id="registerForm" class="form-container">
+            <h2>Daftar Akun</h2>
+            <div class="input-group">
+                <input type="text" id="regUsername" placeholder="Username" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="password" id="regPassword" placeholder="Password">
+            </div>
+            <div class="input-group">
+                <input type="password" id="regConfirmPassword" placeholder="Ulangi Password">
+            </div>
+            <div class="input-group">
+                <input type="text" id="regHint" placeholder="Password Hint">
+            </div>
+            <button onclick="attemptRegister()">Daftar</button>
+            <div class="auth-links">
+                <a href="#" onclick="showLoginForm()">Kembali ke Login</a>
+            </div>
         </div>
-        <button onclick="attemptLogin()">Masuk</button>
+
+        <!-- Reset Password Form -->
+        <div id="resetForm" class="form-container">
+            <h2>Reset Password</h2>
+            <div class="input-group">
+                <input type="text" id="resetUsername" placeholder="Username" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="text" id="resetHint" placeholder="Password Hint">
+            </div>
+            <button onclick="attemptReset()">Reset Password</button>
+            <div class="auth-links">
+                <a href="#" onclick="showLoginForm()">Kembali ke Login</a>
+            </div>
+        </div>
+
         <p id="message"></p>
     </div>
 
@@ -263,7 +331,29 @@
     </footer>
 
     <script>
-        // Add error class to message when showing error
+        // Form visibility functions
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('registerForm').classList.remove('active');
+            document.getElementById('resetForm').classList.remove('active');
+            clearMessage();
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('registerForm').classList.add('active');
+            document.getElementById('resetForm').classList.remove('active');
+            clearMessage();
+        }
+
+        function showResetForm() {
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('registerForm').classList.remove('active');
+            document.getElementById('resetForm').classList.add('active');
+            clearMessage();
+        }
+
+        // Message handling
         const messageElement = document.getElementById('message');
         function showError(message) {
             messageElement.textContent = message;
@@ -273,6 +363,11 @@
         function showSuccess(message) {
             messageElement.textContent = message;
             messageElement.className = 'success';
+        }
+
+        function clearMessage() {
+            messageElement.textContent = '';
+            messageElement.className = '';
         }
     </script>
     <script defer src="renderer.js"></script>

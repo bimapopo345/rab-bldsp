@@ -1,22 +1,36 @@
 function setupMaterialHandlers(ipcMain, db) {
-  // Get all materials
-  ipcMain.on("get-materials", (event) => {
-    db.all("SELECT * FROM materials", (err, materials) => {
-      if (err) {
-        console.error("Error fetching materials:", err);
-        event.reply("materials-data", []);
-        return;
+  // Get all materials for a specific user
+  ipcMain.on("get-materials", (event, { userId }) => {
+    if (!userId) {
+      event.reply("materials-data", []);
+      return;
+    }
+
+    db.all(
+      "SELECT * FROM materials WHERE user_id = ?",
+      [userId],
+      (err, materials) => {
+        if (err) {
+          console.error("Error fetching materials:", err);
+          event.reply("materials-data", []);
+          return;
+        }
+        event.reply("materials-data", materials);
       }
-      event.reply("materials-data", materials);
-    });
+    );
   });
 
-  // Search materials
-  ipcMain.on("search-materials", (event, searchTerm) => {
+  // Search materials for a specific user
+  ipcMain.on("search-materials", (event, { searchTerm, userId }) => {
+    if (!userId) {
+      event.reply("materials-data", []);
+      return;
+    }
+
     const query = `%${searchTerm}%`;
     db.all(
-      "SELECT * FROM materials WHERE name LIKE ? OR category LIKE ?",
-      [query, query],
+      "SELECT * FROM materials WHERE user_id = ? AND (name LIKE ? OR category LIKE ?)",
+      [userId, query, query],
       (err, materials) => {
         if (err) {
           console.error("Error searching materials:", err);
@@ -29,53 +43,81 @@ function setupMaterialHandlers(ipcMain, db) {
   });
 
   // Add new material
-  ipcMain.on("add-material", (event, material) => {
+  ipcMain.on("add-material", (event, { material, userId }) => {
+    if (!userId) {
+      event.reply("material-added", { error: "User ID is required" });
+      return;
+    }
+
     db.run(
-      "INSERT INTO materials (name, unit, price, category) VALUES (?, ?, ?, ?)",
-      [material.name, material.unit, material.price, material.category],
+      "INSERT INTO materials (name, unit, price, category, user_id) VALUES (?, ?, ?, ?, ?)",
+      [material.name, material.unit, material.price, material.category, userId],
       (err) => {
         if (err) {
           console.error("Error adding material:", err);
           event.reply("material-added", { error: err.message });
           return;
         }
-        event.reply("material-added");
+        event.reply("material-added", { success: true });
       }
     );
   });
 
   // Delete material
-  ipcMain.on("delete-material", (event, id) => {
-    db.run("DELETE FROM materials WHERE id = ?", [id], (err) => {
-      if (err) {
-        console.error("Error deleting material:", err);
-        event.reply("material-deleted", { error: err.message });
-        return;
+  ipcMain.on("delete-material", (event, { id, userId }) => {
+    if (!userId) {
+      event.reply("material-deleted", { error: "User ID is required" });
+      return;
+    }
+
+    db.run(
+      "DELETE FROM materials WHERE id = ? AND user_id = ?",
+      [id, userId],
+      (err) => {
+        if (err) {
+          console.error("Error deleting material:", err);
+          event.reply("material-deleted", { error: err.message });
+          return;
+        }
+        event.reply("material-deleted", { success: true });
+        event.reply("focus-search");
       }
-      event.reply("material-deleted");
-      event.reply("focus-search");
-    });
+    );
   });
 
   // Get material by ID
-  ipcMain.on("get-material-by-id", (event, id) => {
-    db.get("SELECT * FROM materials WHERE id = ?", [id], (err, material) => {
-      if (err) {
-        console.error("Error fetching material:", err);
-        event.reply("material-data", {});
-        return;
+  ipcMain.on("get-material-by-id", (event, { id, userId }) => {
+    if (!userId) {
+      event.reply("material-data", {});
+      return;
+    }
+
+    db.get(
+      "SELECT * FROM materials WHERE id = ? AND user_id = ?",
+      [id, userId],
+      (err, material) => {
+        if (err) {
+          console.error("Error fetching material:", err);
+          event.reply("material-data", {});
+          return;
+        }
+        event.reply("material-data", material);
       }
-      event.reply("material-data", material);
-    });
+    );
   });
 
   // Update material
   ipcMain.on(
     "update-material",
-    (event, { id, name, unit, price, category }) => {
+    (event, { id, name, unit, price, category, userId }) => {
+      if (!userId) {
+        event.reply("material-updated", { error: "User ID is required" });
+        return;
+      }
+
       db.run(
-        "UPDATE materials SET name = ?, unit = ?, price = ?, category = ? WHERE id = ?",
-        [name, unit, price, category, id],
+        "UPDATE materials SET name = ?, unit = ?, price = ?, category = ? WHERE id = ? AND user_id = ?",
+        [name, unit, price, category, id, userId],
         (err) => {
           if (err) {
             console.error("Error updating material:", err);
@@ -89,11 +131,17 @@ function setupMaterialHandlers(ipcMain, db) {
   );
 
   // Sort materials
-  ipcMain.on("sort-materials", (event, { column, direction }) => {
-    const query = `SELECT * FROM materials ORDER BY ${column} ${
+  ipcMain.on("sort-materials", (event, { column, direction, userId }) => {
+    if (!userId) {
+      event.reply("sorted-materials", []);
+      return;
+    }
+
+    const query = `SELECT * FROM materials WHERE user_id = ? ORDER BY ${column} ${
       direction === "asc" ? "ASC" : "DESC"
     }`;
-    db.all(query, [], (err, materials) => {
+
+    db.all(query, [userId], (err, materials) => {
       if (err) {
         console.error("Error sorting materials:", err);
         event.reply("sorted-materials", []);

@@ -1,8 +1,21 @@
 const { ipcRenderer } = require("electron");
 
+// Check if user is logged in
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
 // Request latest project data from main process
 function loadLatestProject() {
-  ipcRenderer.send("get-project");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-project", { userId });
   // Show loading state
   const projectDetails = document.getElementById("projectDetails");
   projectDetails.innerHTML = `
@@ -46,10 +59,14 @@ ipcRenderer.on("project-data", (event, project) => {
   displayProjectInfo(project);
 });
 
-// Load data when page loads
-loadLatestProject();
+// Ensure user is authenticated when page loads
+document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
+  loadLatestProject();
+});
 
 // Logout function
 function logout() {
+  localStorage.removeItem("userId");
   window.location.href = "login.html";
 }

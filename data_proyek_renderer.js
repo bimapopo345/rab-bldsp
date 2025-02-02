@@ -1,8 +1,21 @@
 const { ipcRenderer } = require("electron");
 
+// Check if user is logged in
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
 // Load current project if it exists
 function loadProject() {
-  ipcRenderer.send("get-project");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-project", { userId });
 }
 
 // Display project in the UI
@@ -43,6 +56,9 @@ ipcRenderer.on("project-saved", (event, result) => {
 document.getElementById("projectForm").addEventListener("submit", (e) => {
   e.preventDefault();
 
+  const userId = checkAuth();
+  if (!userId) return;
+
   const projectName = document.getElementById("projectName").value.trim();
   const projectLocation = document
     .getElementById("projectLocation")
@@ -57,8 +73,12 @@ document.getElementById("projectForm").addEventListener("submit", (e) => {
   ipcRenderer.send("save-project", {
     name: projectName,
     location: projectLocation,
+    userId,
   });
 });
 
-// Load project data when the page loads
-loadProject();
+// Ensure user is authenticated when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
+  loadProject();
+});

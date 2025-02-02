@@ -1,7 +1,12 @@
 const { STYLES, BORDERS, CURRENCY_FORMAT } = require("./styles");
 
-async function addDetailedAHSSheet(workbook, db) {
+async function addDetailedAHSSheet(workbook, db, userId) {
   return new Promise((resolve, reject) => {
+    if (!userId) {
+      reject(new Error("User ID is required"));
+      return;
+    }
+
     const sheet = workbook.addWorksheet("Analisa Harga Satuan");
 
     // Set column headers
@@ -36,9 +41,12 @@ async function addDetailedAHSSheet(workbook, db) {
             FROM ahs a
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
+            WHERE a.user_id = ? 
+              AND (m.user_id IS NULL OR m.user_id = ?)
+              AND (p.user_id IS NULL OR p.user_id = ?)
             ORDER BY a.kelompok, a.kode_ahs, m.category DESC, m.name
         `,
-      [],
+      [userId, userId, userId],
       (err, rows) => {
         if (err) {
           reject(err);

@@ -1,7 +1,18 @@
 const { ipcRenderer } = require("electron");
 
+// Check if user is logged in
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
 // Load project info when page loads
 document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
   loadProjectInfo();
   setupBackButton();
 });
@@ -18,7 +29,10 @@ function setupBackButton() {
 
 // Load project information
 function loadProjectInfo() {
-  ipcRenderer.send("get-project");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-project", { userId });
 }
 
 // Handle project data
@@ -45,26 +59,38 @@ function hideLoading() {
 
 // Print all RAB data
 function printAll() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   showLoading();
-  ipcRenderer.send("print-rab", "all");
+  ipcRenderer.send("print-rab", { type: "all", userId });
 }
 
 // Print wages only
 function printWages() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   showLoading();
-  ipcRenderer.send("print-rab", "wages");
+  ipcRenderer.send("print-rab", { type: "wages", userId });
 }
 
 // Print materials only
 function printMaterials() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   showLoading();
-  ipcRenderer.send("print-rab", "materials");
+  ipcRenderer.send("print-rab", { type: "materials", userId });
 }
 
 // Print AHS only
 function printAhsOnly() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   showLoading();
-  ipcRenderer.send("print-rab", "ahs");
+  ipcRenderer.send("print-rab", { type: "ahs", userId });
 }
 
 // Handle print completion
@@ -82,3 +108,9 @@ ipcRenderer.on("print-error", (event, error) => {
   hideLoading();
   alert("Terjadi kesalahan: " + error);
 });
+
+// Logout function
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}

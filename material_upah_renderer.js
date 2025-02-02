@@ -9,10 +9,23 @@ let sortOrder = {
   created_at: "asc",
 };
 
+// Check if user is logged in
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
 function sortTable(column) {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const direction = sortOrder[column] === "asc" ? "desc" : "asc";
   sortOrder[column] = direction;
-  ipcRenderer.send("sort-materials", { column, direction });
+  ipcRenderer.send("sort-materials", { column, direction, userId });
 }
 
 ipcRenderer.on("sorted-materials", (event, materials) => {
@@ -40,6 +53,7 @@ ipcRenderer.on("sorted-materials", (event, materials) => {
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
   loadMaterials();
   initializeSearchInput();
 });
@@ -51,11 +65,14 @@ function initializeSearchInput() {
     // Add input event listener once
     if (!searchInput.hasAttribute("data-has-handler")) {
       searchInput.addEventListener("input", (event) => {
+        const userId = checkAuth();
+        if (!userId) return;
+
         const searchTerm = event.target.value.trim();
         if (searchTerm === "") {
           loadMaterials(); // Load all materials if the search is cleared
         } else {
-          ipcRenderer.send("search-materials", searchTerm); // Send search term to backend
+          ipcRenderer.send("search-materials", { searchTerm, userId }); // Send search term to backend
         }
       });
       searchInput.setAttribute("data-has-handler", "true");
@@ -65,7 +82,10 @@ function initializeSearchInput() {
 
 // Load materials from the database
 function loadMaterials() {
-  ipcRenderer.send("get-materials");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-materials", { userId });
 }
 
 // Focus handler from main process
@@ -114,7 +134,7 @@ ipcRenderer.on("materials-data", (event, materials) => {
   });
 
   // Update total count
-  document.getElementById("materialCount").textContent = materials.length; // Update total count
+  document.getElementById("materialCount").textContent = materials.length;
 });
 
 ipcRenderer.on("material-updated", (event, response) => {
@@ -156,6 +176,9 @@ function closeEditModal() {
 }
 
 function updateMaterial() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const name = document.getElementById("editName").value.trim();
   const unit = document.getElementById("editUnit").value.trim();
   const price = document.getElementById("editPrice").value;
@@ -173,12 +196,16 @@ function updateMaterial() {
     unit,
     price,
     category,
+    userId,
   });
 
   closeEditModal(); // Menutup modal setelah update
 }
 
 function saveMaterial() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const name = document.getElementById("newName").value.trim();
   const unit = document.getElementById("newUnit").value.trim();
   const price = document.getElementById("newPrice").value;
@@ -190,16 +217,18 @@ function saveMaterial() {
   }
 
   ipcRenderer.send("add-material", {
-    name,
-    unit,
-    price: parseFloat(price),
-    category,
+    material: {
+      name,
+      unit,
+      price: parseFloat(price),
+      category,
+    },
+    userId,
   });
 
   closeAddModal();
 }
 
-// Handle material added successfully
 // Handle material added successfully
 ipcRenderer.on("material-added", (event, response) => {
   if (response && response.error) {
@@ -211,17 +240,20 @@ ipcRenderer.on("material-added", (event, response) => {
 
 // Edit material
 function editMaterial(id) {
-  // Menyimpan id material yang akan diedit
-  currentMaterialId = id;
+  const userId = checkAuth();
+  if (!userId) return;
 
-  // Kirim permintaan untuk mengambil data material berdasarkan id
-  ipcRenderer.send("get-material-by-id", id);
+  currentMaterialId = id;
+  ipcRenderer.send("get-material-by-id", { id, userId });
 }
 
 // Delete material
 function deleteMaterial(id) {
+  const userId = checkAuth();
+  if (!userId) return;
+
   if (confirm("Apakah Anda yakin ingin menghapus item ini?")) {
-    ipcRenderer.send("delete-material", id);
+    ipcRenderer.send("delete-material", { id, userId });
 
     // Only reset search if input is not focused and modal is closed
     const searchInput = document.getElementById("searchInput");
@@ -285,7 +317,8 @@ document.addEventListener("click", function (event) {
   }
 });
 
-// Logout/Exit function
+// Logout function
 function logout() {
-  window.location.href = "index.html";
+  localStorage.removeItem("userId"); // Clear user data
+  window.location.href = "login.html";
 }

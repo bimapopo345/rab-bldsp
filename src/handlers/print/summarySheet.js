@@ -1,7 +1,12 @@
 const { STYLES, BORDERS, CURRENCY_FORMAT } = require("./styles");
 
-async function addSummarySheet(workbook, db) {
+async function addSummarySheet(workbook, db, userId) {
   return new Promise((resolve, reject) => {
+    if (!userId) {
+      reject(new Error("User ID is required"));
+      return;
+    }
+
     const sheet = workbook.addWorksheet("Rekapitulasi");
 
     // Set columns
@@ -38,6 +43,8 @@ async function addSummarySheet(workbook, db) {
             FROM pricing p
             JOIN materials m ON p.material_id = m.id
             WHERE LOWER(m.category) != 'upah'
+            AND p.user_id = ?
+            AND m.user_id = ?
         `;
 
     // Get wage total
@@ -46,6 +53,8 @@ async function addSummarySheet(workbook, db) {
             FROM pricing p
             JOIN materials m ON p.material_id = m.id
             WHERE LOWER(m.category) = 'upah'
+            AND p.user_id = ?
+            AND m.user_id = ?
         `;
 
     let currentRow = 3;
@@ -53,13 +62,13 @@ async function addSummarySheet(workbook, db) {
     // Get both totals
     Promise.all([
       new Promise((resolve, reject) => {
-        db.get(materialQuery, [], (err, result) => {
+        db.get(materialQuery, [userId, userId], (err, result) => {
           if (err) reject(err);
           else resolve(result?.total || 0);
         });
       }),
       new Promise((resolve, reject) => {
-        db.get(wageQuery, [], (err, result) => {
+        db.get(wageQuery, [userId, userId], (err, result) => {
           if (err) reject(err);
           else resolve(result?.total || 0);
         });

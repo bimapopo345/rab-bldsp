@@ -1,7 +1,12 @@
 const { STYLES, BORDERS, CURRENCY_FORMAT } = require("./styles");
 
-async function addDetailedWageSheet(workbook, db) {
+async function addDetailedWageSheet(workbook, db, userId) {
   return new Promise((resolve, reject) => {
+    if (!userId) {
+      reject(new Error("User ID is required"));
+      return;
+    }
+
     const sheet = workbook.addWorksheet("Upah");
 
     const columns = [
@@ -56,10 +61,13 @@ async function addDetailedWageSheet(workbook, db) {
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
             AND LOWER(m.category) = 'upah'
+            AND a.user_id = ?
+            AND m.user_id = ?
+            AND p.user_id = ?
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
-    db.all(query, [], (err, rows) => {
+    db.all(query, [userId, userId, userId], (err, rows) => {
       if (err) {
         reject(err);
         return;

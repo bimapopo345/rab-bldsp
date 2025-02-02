@@ -8,11 +8,16 @@ const { addDetailedWageSheet } = require("./print/wageSheet");
 const { addSummarySheet } = require("./print/summarySheet");
 
 function setupPrintHandlers(ipcMain, db) {
-  ipcMain.on("print-rab", async (event, type) => {
+  ipcMain.on("print-rab", async (event, { type, userId }) => {
+    if (!userId) {
+      event.reply("print-error", "User ID is required");
+      return;
+    }
+
     const workbook = new ExcelJS.Workbook();
 
     try {
-      const project = await getProject(db);
+      const project = await getProject(db, userId);
       if (!project) {
         throw new Error("Proyek tidak ditemukan");
       }
@@ -33,26 +38,26 @@ function setupPrintHandlers(ipcMain, db) {
           // Project info sheet
           await addProjectSheet(workbook, project);
           // Summary sheet first for overview
-          await addSummarySheet(workbook, db);
+          await addSummarySheet(workbook, db, userId);
           // Detailed sheets
-          await addDetailedAHSSheet(workbook, db);
-          await addDetailedMaterialSheet(workbook, db);
-          await addDetailedWageSheet(workbook, db);
+          await addDetailedAHSSheet(workbook, db, userId);
+          await addDetailedMaterialSheet(workbook, db, userId);
+          await addDetailedWageSheet(workbook, db, userId);
           break;
 
         case "wages":
           await addProjectSheet(workbook, project);
-          await addDetailedWageSheet(workbook, db);
+          await addDetailedWageSheet(workbook, db, userId);
           break;
 
         case "materials":
           await addProjectSheet(workbook, project);
-          await addDetailedMaterialSheet(workbook, db);
+          await addDetailedMaterialSheet(workbook, db, userId);
           break;
 
         case "ahs":
           await addProjectSheet(workbook, project);
-          await addDetailedAHSSheet(workbook, db);
+          await addDetailedAHSSheet(workbook, db, userId);
           break;
       }
 
@@ -76,7 +81,7 @@ function setupPrintHandlers(ipcMain, db) {
       workbook.properties.keywords = "RAB, konstruksi, anggaran";
       workbook.properties.category = "Laporan Keuangan";
       workbook.properties.company = "RAB System";
-      workbook.properties.manager = "Admin";
+      workbook.properties.manager = project.name;
 
       await workbook.xlsx.writeFile(filePath);
       event.reply("print-complete", {
@@ -91,10 +96,11 @@ function setupPrintHandlers(ipcMain, db) {
   });
 }
 
-function getProject(db) {
+function getProject(db, userId) {
   return new Promise((resolve, reject) => {
     db.get(
-      "SELECT * FROM projects ORDER BY created_at DESC LIMIT 1",
+      "SELECT * FROM projects WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+      [userId],
       (err, project) => {
         if (err) reject(err);
         else resolve(project);

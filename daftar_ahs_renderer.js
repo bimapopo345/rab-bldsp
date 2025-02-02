@@ -8,10 +8,23 @@ let sortOrder = {
   satuan: "asc",
 };
 
+// Check if user is logged in
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
 function sortTable(column) {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const direction = sortOrder[column] === "asc" ? "desc" : "asc";
   sortOrder[column] = direction;
-  ipcRenderer.send("sort-ahs", { column, direction });
+  ipcRenderer.send("sort-ahs", { column, direction, userId });
 }
 
 ipcRenderer.on("sorted-ahs", (event, ahs) => {
@@ -38,6 +51,7 @@ ipcRenderer.on("sorted-ahs", (event, ahs) => {
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
   loadAhs();
   initializeSearchInput();
 });
@@ -48,11 +62,14 @@ function initializeSearchInput() {
   if (searchInput) {
     if (!searchInput.hasAttribute("data-has-handler")) {
       searchInput.addEventListener("input", (event) => {
+        const userId = checkAuth();
+        if (!userId) return;
+
         const searchTerm = event.target.value.trim();
         if (searchTerm === "") {
           loadAhs(); // Load all AHS if search is cleared
         } else {
-          ipcRenderer.send("search-ahs", searchTerm); // Send search term to the main process
+          ipcRenderer.send("search-ahs", { searchTerm, userId }); // Send search term to the main process
         }
       });
       searchInput.setAttribute("data-has-handler", "true");
@@ -62,7 +79,10 @@ function initializeSearchInput() {
 
 // Load AHS data from the database
 function loadAhs() {
-  ipcRenderer.send("get-ahs");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-ahs", { userId });
 }
 
 // Handle AHS data received from main process
@@ -119,6 +139,9 @@ function closeAhsModal() {
 
 // Save new AHS
 function saveAhs() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const kelompok = document.getElementById("newKelompok").value.trim();
   const kodeAhs = document.getElementById("newKodeAhs").value.trim();
   const ahs = document.getElementById("newAhs").value.trim();
@@ -131,10 +154,13 @@ function saveAhs() {
 
   // Send AHS data to backend to save in the database
   ipcRenderer.send("add-ahs", {
-    kelompok,
-    kode_ahs: kodeAhs,
-    ahs,
-    satuan,
+    ahsData: {
+      kelompok,
+      kode_ahs: kodeAhs,
+      ahs,
+      satuan,
+    },
+    userId,
   });
 
   closeAhsModal(); // Close modal after saving
@@ -151,8 +177,11 @@ ipcRenderer.on("ahs-added", (event, response) => {
 
 // Edit AHS functionality
 function editAhs(id) {
+  const userId = checkAuth();
+  if (!userId) return;
+
   currentAhsId = id;
-  ipcRenderer.send("get-ahs-by-id", id); // Send request for specific AHS by ID
+  ipcRenderer.send("get-ahs-by-id", { id, userId }); // Send request for specific AHS by ID
 }
 
 // Handle the AHS data for editing modal
@@ -177,6 +206,9 @@ function closeEditAhsModal() {
 
 // Update AHS
 function updateAhs() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const kelompok = document.getElementById("editKelompok").value.trim();
   const kodeAhs = document.getElementById("editKodeAhs").value.trim();
   const ahs = document.getElementById("editAhs").value.trim();
@@ -187,16 +219,19 @@ function updateAhs() {
     return;
   }
 
-  // Kirim data yang diperbarui ke backend untuk disimpan di database
+  // Send updated data to backend
   ipcRenderer.send("update-ahs", {
-    id: currentAhsId,
-    kelompok,
-    kode_ahs: kodeAhs,
-    ahs,
-    satuan,
+    ahsData: {
+      id: currentAhsId,
+      kelompok,
+      kode_ahs: kodeAhs,
+      ahs,
+      satuan,
+    },
+    userId,
   });
 
-  closeEditAhsModal(); // Menutup modal setelah update
+  closeEditAhsModal();
 }
 
 // Handle AHS updated successfully
@@ -204,19 +239,17 @@ ipcRenderer.on("ahs-updated", (event, response) => {
   if (response && response.error) {
     alert("Error: " + response.error);
   } else {
-    loadAhs(); // Reload AHS data setelah update
+    loadAhs(); // Reload AHS data after update
   }
 });
 
-// Fungsi kembali ke halaman utama
-function goBack() {
-  window.location.href = "index.html"; // Ganti dengan alamat homepage Anda
-}
-
 // Delete AHS
 function deleteAhs(id) {
+  const userId = checkAuth();
+  if (!userId) return;
+
   if (confirm("Apakah Anda yakin ingin menghapus item ini?")) {
-    ipcRenderer.send("delete-ahs", id);
+    ipcRenderer.send("delete-ahs", { id, userId });
   }
 }
 
@@ -228,3 +261,14 @@ ipcRenderer.on("ahs-deleted", (event, response) => {
     loadAhs(); // Reload AHS data after deletion
   }
 });
+
+// Logout function
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}
+
+// Back to main page
+function goBack() {
+  window.location.href = "index.html";
+}
