@@ -169,3 +169,7 @@ function updateKoefisien(materialId, newKoefisien) {
     }
   }
 }
+
+function goBack() {
+  window.location.href = "index.html"; // Ganti dengan alamat homepage Anda
+}
