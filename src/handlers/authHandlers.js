@@ -132,6 +132,35 @@ function setupAuthHandlers(ipcMain, db) {
       }
     );
   });
+
+  // Check if user is admin
+  ipcMain.on("check-admin", (event, { userId }) => {
+    db.get("SELECT username FROM users WHERE id = ?", [userId], (err, user) => {
+      if (err) {
+        console.error("Admin check error:", err);
+        event.reply("admin-check-result", false);
+        return;
+      }
+      // Check if user exists and is admin
+      event.reply("admin-check-result", user && user.username === "admin");
+    });
+  });
+
+  // Get all users
+  ipcMain.on("get-users", (event) => {
+    db.all(
+      "SELECT username, password, hint FROM users ORDER BY username",
+      [],
+      (err, users) => {
+        if (err) {
+          console.error("Error fetching users:", err);
+          event.reply("users-data", []);
+          return;
+        }
+        event.reply("users-data", users);
+      }
+    );
+  });
 }
 
 module.exports = { setupAuthHandlers };
