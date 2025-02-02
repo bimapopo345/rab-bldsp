@@ -55,6 +55,13 @@ function initializeDatabase() {
     );
   `);
 
+  const ahsTableExists = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='ahs';"
+    )
+    .get();
+  console.log("AHS Table Exists:", ahsTableExists); // Debug log
+
   // Menambahkan admin default jika belum ada
   const existingAdmin = db.prepare("SELECT COUNT(*) AS count FROM admin").get();
   if (existingAdmin.count === 0) {

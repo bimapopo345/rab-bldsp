@@ -228,10 +228,10 @@ ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
 ipcMain.on("get-ahs", (event) => {
   try {
     const ahs = db.prepare("SELECT * FROM ahs").all();
-    event.reply("ahs-data", ahs);
+    event.reply("ahs-data", ahs); // Reply to renderer with the fetched data
   } catch (err) {
     console.error("Error fetching AHS:", err);
-    event.reply("ahs-data", []);
+    event.reply("ahs-data", []); // Send empty array if error occurs
   }
 });
 

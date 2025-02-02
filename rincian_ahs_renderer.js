@@ -27,6 +27,7 @@ function searchAhs() {
 }
 
 ipcRenderer.on("ahs-data", (event, ahs) => {
+  console.log("Received AHS data:", ahs); // Check data
   const searchInput = document
     .getElementById("searchAhsInput")
     .value.trim()
@@ -54,15 +55,17 @@ ipcRenderer.on("ahs-data", (event, ahs) => {
 });
 
 function selectAhs(id) {
-  ipcRenderer.send("get-ahs-by-id", id);
+  selectedAhsId = id; // Set AHS ID yang dipilih
+  ipcRenderer.send("get-ahs-by-id", id); // Mengambil data AHS berdasarkan id yang dipilih
 }
 
 ipcRenderer.on("ahs-data-for-edit", (event, ahs) => {
+  console.log("Received AHS data for edit:", ahs); // Periksa data AHS yang diterima
   if (ahs) {
     document.getElementById("kelompok-pekerjaan").value = ahs.kelompok;
     document.getElementById("satuan").value = ahs.satuan;
     document.getElementById("analisa-nama").value = ahs.ahs;
-    closeSearchAhsModal();
+    closeSearchAhsModal(); // Menutup modal setelah data AHS diterima
   }
 });
 
