@@ -134,8 +134,34 @@ function selectMaterial(id, name, price) {
   selectedMaterialId = id;
   document.getElementById("selectedMaterialName").innerText = name;
   document.getElementById("selectedMaterialPrice").innerText = `Rp ${price}`;
-  document.getElementById("koefisienInputModal").style.display = "block"; // Show coefficient input modal
-  closeSearchMaterialModal(); // Close material search modal
+
+  // Koefisien default di sini adalah 1
+  const koefisien = 1;
+
+  const total = price * koefisien; // Hitung total berdasarkan koefisien default
+
+  // Menambahkan bahan ke dalam tabel rincian
+  const tableBody = document.getElementById("materialDetails");
+  const row = document.createElement("tr");
+  row.innerHTML = `
+      <td>Bahan</td>
+      <td>${name}</td>
+      <td>kg</td> <!-- Satuan tetap kg, bisa disesuaikan -->
+      <td><input type="number" value="${koefisien}" onchange="updateKoefisien(${selectedMaterialId}, this.value)"></td>
+      <td>Rp ${price}</td>
+      <td>Rp ${total}</td>
+  `;
+  tableBody.appendChild(row);
+
+  // Kirim data ke backend untuk disimpan
+  ipcRenderer.send("add-pricing", {
+    ahs_id: selectedAhsId,
+    material_id: selectedMaterialId,
+    quantity: koefisien,
+    koefisien: koefisien,
+  });
+
+  closeSearchMaterialModal(); // Menutup modal setelah pemilihan
 }
 
 function addMaterialToTable() {
@@ -185,4 +211,34 @@ function closeKoefisienModal() {
 // Close the material search modal
 function closeSearchMaterialModal() {
   document.getElementById("searchMaterialModal").style.display = "none";
+}
+
+function updateKoefisien(materialId, newKoefisien) {
+  // Cari baris yang berhubungan dengan materialId di tabel rincian
+  const tableBody = document.getElementById("materialDetails");
+  const rows = tableBody.getElementsByTagName("tr");
+
+  // Loop untuk menemukan material yang sedang diubah koefisiennya
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.getElementsByTagName("td");
+
+    // Jika ID material cocok, perbarui koefisien dan hitung total
+    if (
+      cells[1].innerText ===
+      document.getElementById("selectedMaterialName").innerText
+    ) {
+      const price = parseFloat(cells[4].innerText.replace("Rp ", ""));
+      const totalCell = cells[5];
+      const newTotal = price * newKoefisien;
+      totalCell.innerText = `Rp ${newTotal}`;
+
+      // Update koefisien di backend
+      ipcRenderer.send("update-pricing", {
+        ahs_id: selectedAhsId,
+        material_id: materialId,
+        koefisien: newKoefisien,
+      });
+    }
+  }
 }
