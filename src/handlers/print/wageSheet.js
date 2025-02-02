@@ -7,7 +7,7 @@ async function addDetailedWageSheet(workbook, db) {
     const columns = [
       { header: "Kelompok", key: "kelompok", width: 20 },
       { header: "Kode AHS", key: "kode_ahs", width: 15 },
-      { header: "Uraian", key: "uraian", width: 40 },
+      { header: "Nama AHS", key: "uraian", width: 40 },
       { header: "Nama Tenaga", key: "wage_name", width: 30 },
       { header: "Satuan", key: "satuan", width: 12 },
       { header: "Kuantitas", key: "kuantitas", width: 12 },
@@ -30,8 +30,9 @@ async function addDetailedWageSheet(workbook, db) {
     titleCell.alignment = { horizontal: "center", vertical: "middle" };
     sheet.getRow(1).height = 30;
     // Add column headers
-    sheet.columns.forEach((column, idx) => {
-      const cell = sheet.getRow(2).getCell(idx + 1);
+    const headerRow = sheet.getRow(2);
+    columns.forEach((column, idx) => {
+      const cell = headerRow.getCell(idx + 1);
       cell.value = column.header;
       cell.style = {
         ...STYLES.header,
@@ -39,7 +40,7 @@ async function addDetailedWageSheet(workbook, db) {
         alignment: { horizontal: "center", vertical: "middle" },
       };
     });
-    sheet.getRow(2).height = 25;
+    headerRow.height = 25;
 
     const query = `
             SELECT 
