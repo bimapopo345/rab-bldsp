@@ -225,25 +225,27 @@ ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
 
 // Get all AHS
 // Fetch AHS
+// Mendapatkan semua data AHS
 ipcMain.on("get-ahs", (event) => {
   try {
     const ahs = db.prepare("SELECT * FROM ahs").all();
-    event.reply("ahs-data", ahs); // Reply to renderer with the fetched data
+    event.reply("ahs-data", ahs); // Kirim data AHS ke renderer
   } catch (err) {
     console.error("Error fetching AHS:", err);
-    event.reply("ahs-data", []); // Send empty array if error occurs
+    event.reply("ahs-data", []); // Jika error, kirim array kosong
   }
 });
 
 // Get AHS by ID
 // Get AHS data by ID for autofill
+// Mendapatkan AHS berdasarkan ID
 ipcMain.on("get-ahs-by-id", (event, id) => {
   try {
     const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
-    event.reply("ahs-data-for-edit", ahs); // Send AHS data back
+    event.reply("ahs-data-for-edit", ahs); // Kirim data AHS untuk editing
   } catch (err) {
     console.error("Error fetching AHS by ID:", err);
-    event.reply("ahs-data-for-edit", null);
+    event.reply("ahs-data-for-edit", null); // Jika error, kirim null
   }
 });
 

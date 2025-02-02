@@ -1,12 +1,12 @@
 const { ipcRenderer } = require("electron");
 
 let selectedMaterialId = null;
-let selectedAhsId = 1;
+let selectedAhsId = null;
 
 function openAhsModal() {
   const modal = document.getElementById("searchAhsModal");
-  modal.style.display = "block"; // Ensure modal is shown
-  loadAhs(); // Load AHS data when the modal is opened
+  modal.style.display = "block"; // Pastikan modal ditampilkan
+  loadAhs(); // Kirim permintaan untuk mengambil data AHS
 }
 
 function closeSearchAhsModal() {
@@ -23,11 +23,10 @@ function searchAhs() {
     .getElementById("searchAhsInput")
     .value.trim()
     .toLowerCase();
-  ipcRenderer.send("search-ahs", searchInput);
+  ipcRenderer.send("search-ahs", searchInput); // Kirim pencarian ke main process
 }
 
 ipcRenderer.on("ahs-data", (event, ahs) => {
-  console.log("Received AHS data:", ahs); // Check data
   const searchInput = document
     .getElementById("searchAhsInput")
     .value.trim()
@@ -44,12 +43,12 @@ ipcRenderer.on("ahs-data", (event, ahs) => {
   filteredAhs.forEach((item) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>${item.kelompok}</td>
-            <td>${item.kode_ahs}</td>
-            <td>${item.ahs}</td>
-            <td>${item.satuan}</td>
-            <td><button onclick="selectAhs(${item.id})">Pilih</button></td>
-        `;
+      <td>${item.kelompok}</td>
+      <td>${item.kode_ahs}</td>
+      <td>${item.ahs}</td>
+      <td>${item.satuan}</td>
+      <td><button onclick="selectAhs(${item.id})">Pilih</button></td>
+    `;
     tableBody.appendChild(row);
   });
 });
