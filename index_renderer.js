@@ -1,84 +1,115 @@
 const { ipcRenderer } = require("electron");
 
 document.addEventListener("DOMContentLoaded", () => {
-  const userId = checkAuth();
-  if (userId) {
-    loadProject();
-    checkIfAdmin();
-  }
-});
-
-function checkAuth() {
   const userId = localStorage.getItem("userId");
   if (!userId) {
     window.location.href = "login.html";
-    return null;
+    return;
   }
-  return userId;
-}
 
-function loadProject() {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
+  // Check if user is admin
+  ipcRenderer.send("check-admin", { userId });
 
+  // Load project information
+  loadProjectInfo(userId);
+
+  // Add export/import buttons for non-admin users
+  ipcRenderer.on("admin-check-result", (event, isAdmin) => {
+    if (!isAdmin) {
+      // Add user export/import buttons
+      const container = document.querySelector(".container");
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "user-data-actions";
+      actionsDiv.style.cssText =
+        "margin-bottom: 20px; display: flex; gap: 10px;";
+
+      const exportBtn = document.createElement("button");
+      exportBtn.textContent = "Export Data Saya";
+      exportBtn.className = "action-btn";
+      exportBtn.onclick = exportMyData;
+
+      const importBtn = document.createElement("button");
+      importBtn.textContent = "Import Data";
+      importBtn.className = "action-btn";
+      importBtn.onclick = importMyData;
+
+      actionsDiv.appendChild(exportBtn);
+      actionsDiv.appendChild(importBtn);
+
+      // Insert before first element in container
+      container.insertBefore(actionsDiv, container.firstChild);
+
+      // Add styles for buttons
+      const style = document.createElement("style");
+      style.textContent = `
+        .action-btn {
+          background-color: #1a4f7c;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.3s;
+        }
+        .action-btn:hover {
+          background-color: #16426a;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  });
+});
+
+function loadProjectInfo(userId) {
   ipcRenderer.send("get-project", { userId });
 }
 
-// Check if user is admin and show User List button
-function checkIfAdmin() {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
-
-  ipcRenderer.send("check-admin", { userId });
-}
-
+// Handle project data response
 ipcRenderer.on("project-data", (event, project) => {
-  const detailsDiv = document.getElementById("projectDetails");
-  if (project) {
-    detailsDiv.innerHTML = `
-            <p><span class="label">Nama Proyek:</span> ${project.name}</p>
-            <p><span class="label">Lokasi:</span> ${project.location}</p>
-            <p><span class="label">Tanggal:</span> ${new Date(
-              project.created_at
-            ).toLocaleDateString()}</p>
-        `;
-  } else {
-    detailsDiv.innerHTML = `
-            <p>Belum ada proyek. Silakan buat proyek baru di menu Data Proyek.</p>
-        `;
-  }
-});
-
-// Handle admin check response
-ipcRenderer.on("admin-check-result", (event, isAdmin) => {
-  const menuGrid = document.querySelector(".menu-grid");
-  if (isAdmin) {
-    // Add User List menu card for admin
-    const userListCard = document.createElement("div");
-    userListCard.className = "menu-card";
-    userListCard.onclick = () => (window.location.href = "userList.html");
-    userListCard.innerHTML = `
-            <div class="icon-container">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                </svg>
-            </div>
-            <h3 class="menu-title">User List</h3>
-            <p class="menu-description">Kelola daftar pengguna sistem</p>
-        `;
-
-    // Insert after Data Proyek menu
-    const dataProyekCard = document.querySelector(".menu-card:nth-child(5)");
-    if (dataProyekCard) {
-      dataProyekCard.parentNode.insertBefore(
-        userListCard,
-        dataProyekCard.nextSibling
-      );
+  const projectDetails = document.getElementById("projectDetails");
+  if (projectDetails) {
+    if (project) {
+      projectDetails.innerHTML = `
+        <p><span class="label">Nama Proyek:</span> ${project.name || "-"}</p>
+        <p><span class="label">Lokasi:</span> ${project.location || "-"}</p>
+      `;
     } else {
-      menuGrid.appendChild(userListCard);
+      projectDetails.innerHTML = `
+        <p>Belum ada data proyek. Silakan buat proyek baru di menu Data Proyek.</p>
+      `;
     }
   }
 });
+
+async function exportMyData() {
+  const userId = localStorage.getItem("userId");
+  try {
+    const result = await ipcRenderer.invoke("export-my-data", userId);
+    alert(result.message);
+  } catch (error) {
+    alert("Error mengekspor data: " + error.message);
+  }
+}
+
+async function importMyData() {
+  const userId = localStorage.getItem("userId");
+  if (
+    confirm(
+      "Import akan mengganti semua data Anda yang ada. Apakah Anda yakin ingin melanjutkan?"
+    )
+  ) {
+    try {
+      const result = await ipcRenderer.invoke("import-my-data", userId);
+      alert(result.message);
+      if (result.success) {
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Error mengimpor data: " + error.message);
+    }
+  }
+}
 
 function logout() {
   localStorage.removeItem("userId");

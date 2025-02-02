@@ -1,6 +1,6 @@
 function setupCalculatorHandlers(ipcMain, db) {
   // Get summary data for all material items
-  ipcMain.on("get-summary-data", (event) => {
+  ipcMain.on("get-summary-data", (event, { userId }) => {
     const query = `
             SELECT 
                 a.ahs as deskripsi,
@@ -12,10 +12,13 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
             AND LOWER(m.category) != 'upah'
+            AND a.user_id = ?
+            AND m.user_id = ?
+            AND p.user_id = ?
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
-    db.all(query, [], (err, rows) => {
+    db.all(query, [userId, userId, userId], (err, rows) => {
       if (err) {
         console.error("Error fetching summary data:", err);
         event.reply("summary-data", []);
@@ -26,7 +29,7 @@ function setupCalculatorHandlers(ipcMain, db) {
   });
 
   // Get detailed data grouped by AHS category for materials
-  ipcMain.on("get-detail-data", (event) => {
+  ipcMain.on("get-detail-data", (event, { userId }) => {
     const query = `
             SELECT 
                 a.kelompok,
@@ -39,10 +42,13 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
             AND LOWER(m.category) != 'upah'
+            AND a.user_id = ?
+            AND m.user_id = ?
+            AND p.user_id = ?
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
-    db.all(query, [], (err, rows) => {
+    db.all(query, [userId, userId, userId], (err, rows) => {
       if (err) {
         console.error("Error fetching detail data:", err);
         event.reply("detail-data", {});
@@ -65,7 +71,7 @@ function setupCalculatorHandlers(ipcMain, db) {
   });
 
   // Get summary data for all wage items
-  ipcMain.on("get-wage-summary-data", (event) => {
+  ipcMain.on("get-wage-summary-data", (event, { userId }) => {
     const query = `
             SELECT 
                 a.ahs as deskripsi,
@@ -77,10 +83,13 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
             AND LOWER(m.category) = 'upah'
+            AND a.user_id = ?
+            AND m.user_id = ?
+            AND p.user_id = ?
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
-    db.all(query, [], (err, rows) => {
+    db.all(query, [userId, userId, userId], (err, rows) => {
       if (err) {
         console.error("Error fetching wage summary data:", err);
         event.reply("wage-summary-data", []);
@@ -92,7 +101,7 @@ function setupCalculatorHandlers(ipcMain, db) {
   });
 
   // Get detailed data grouped by AHS category for wages
-  ipcMain.on("get-wage-detail-data", (event) => {
+  ipcMain.on("get-wage-detail-data", (event, { userId }) => {
     const query = `
             SELECT 
                 a.kelompok,
@@ -105,10 +114,13 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
             AND LOWER(m.category) = 'upah'
+            AND a.user_id = ?
+            AND m.user_id = ?
+            AND p.user_id = ?
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
-    db.all(query, [], (err, rows) => {
+    db.all(query, [userId, userId, userId], (err, rows) => {
       if (err) {
         console.error("Error fetching wage detail data:", err);
         event.reply("wage-detail-data", {});

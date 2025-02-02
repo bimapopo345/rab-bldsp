@@ -161,6 +161,26 @@ function setupAuthHandlers(ipcMain, db) {
       }
     );
   });
+
+  // Get user ID by username
+  ipcMain.on("get-user-id", (event, username) => {
+    db.get(
+      "SELECT id FROM users WHERE username = ?",
+      [username],
+      (err, user) => {
+        if (err) {
+          console.error("Error fetching user ID:", err);
+          event.reply("user-id-result", { error: "Error fetching user ID" });
+          return;
+        }
+        if (!user) {
+          event.reply("user-id-result", { error: "User not found" });
+          return;
+        }
+        event.reply("user-id-result", { id: user.id });
+      }
+    );
+  });
 }
 
 module.exports = { setupAuthHandlers };

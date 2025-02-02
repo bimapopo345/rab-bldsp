@@ -28,8 +28,52 @@ function loadUsers() {
 ipcRenderer.on("admin-check-result", (event, isAdmin) => {
   if (!isAdmin) {
     window.location.href = "index.html";
+  } else {
+    // Show admin-only database actions
+    document.getElementById("adminActions").style.display = "flex";
+    setupDatabaseHandlers();
   }
 });
+
+function setupDatabaseHandlers() {
+  // Database-wide export/import
+  document
+    .getElementById("exportDatabaseBtn")
+    .addEventListener("click", async () => {
+      showLoading();
+      try {
+        const result = await ipcRenderer.invoke("export-database");
+        alert(result.message);
+      } catch (error) {
+        alert("Error mengekspor database: " + error.message);
+      } finally {
+        hideLoading();
+      }
+    });
+
+  document
+    .getElementById("importDatabaseBtn")
+    .addEventListener("click", async () => {
+      if (
+        confirm(
+          "Import database akan mengganti semua data yang ada. Tindakan ini tidak dapat dibatalkan. Apakah Anda yakin ingin melanjutkan?"
+        )
+      ) {
+        showLoading();
+        try {
+          const result = await ipcRenderer.invoke("import-database");
+          alert(result.message);
+          if (result.success) {
+            window.location.reload();
+          }
+        } catch (error) {
+          alert("Error mengimpor database: " + error.message);
+        } finally {
+          hideLoading();
+        }
+      }
+    });
+}
 
 // Handle users data
 ipcRenderer.on("users-data", (event, users) => {
@@ -42,13 +86,16 @@ function displayUsers(users) {
   tableBody.innerHTML = "";
 
   users.forEach((user, index) => {
+    // Skip admin in the list
+    if (user.username === "admin") return;
+
     const row = document.createElement("tr");
     row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${user.username}</td>
-            <td>${user.password}</td>
-            <td>${user.hint}</td>
-        `;
+      <td>${index}</td>
+      <td>${user.username}</td>
+      <td>${user.password}</td>
+      <td>${user.hint}</td>
+    `;
     tableBody.appendChild(row);
   });
 }

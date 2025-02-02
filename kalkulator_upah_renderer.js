@@ -1,5 +1,15 @@
 const { ipcRenderer } = require("electron");
 
+// Check authentication
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
 // Show summary report
 function showSummaryReport() {
   document.getElementById("summaryReport").style.display = "block";
@@ -39,12 +49,18 @@ function formatNumber(number) {
 
 // Load summary data
 function loadSummaryData() {
-  ipcRenderer.send("get-wage-summary-data");
+  const userId = checkAuth();
+  if (userId) {
+    ipcRenderer.send("get-wage-summary-data", { userId });
+  }
 }
 
 // Load detail data
 function loadDetailData() {
-  ipcRenderer.send("get-wage-detail-data");
+  const userId = checkAuth();
+  if (userId) {
+    ipcRenderer.send("get-wage-detail-data", { userId });
+  }
 }
 
 // Handle summary data response
@@ -129,11 +145,13 @@ ipcRenderer.on("wage-detail-data", (event, data) => {
   });
 });
 
-// Show summary report by default when page loads
-showSummaryReport();
-
-// Add event listeners for buttons
+// Initialize page
 document.addEventListener("DOMContentLoaded", () => {
+  if (checkAuth()) {
+    // Show summary report by default
+    showSummaryReport();
+  }
+
   // Back button
   const backBtn = document.querySelector(".back-btn");
   if (backBtn) {
