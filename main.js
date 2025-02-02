@@ -9,6 +9,7 @@ const { setupProjectHandlers } = require("./src/handlers/projectHandlers");
 const {
   setupCalculatorHandlers,
 } = require("./src/handlers/calculatorHandlers");
+const { setupPrintHandlers } = require("./src/handlers/printHandlers");
 
 let mainWindow;
 let db;
@@ -35,6 +36,7 @@ function createWindow() {
       setupPricingHandlers(ipcMain, db);
       setupProjectHandlers(ipcMain, db);
       setupCalculatorHandlers(ipcMain, db);
+      setupPrintHandlers(ipcMain, db);
     })
     .catch(console.error);
 
