@@ -6,92 +6,164 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rincian AHS</title>
     <style>
+        :root {
+            --primary: #1a4f7c;
+            --secondary: #f26522;
+            --accent: #58595b;
+            --background: #f5f5f5;
+            --white: #ffffff;
+            --border: #dde1e4;
+            --shadow: rgba(26, 79, 124, 0.1);
+            --hover: #183f62;
+            --error: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #e4e4e4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            min-height: 100vh;
+            color: var(--accent);
+        }
+
+        .top-bar {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            color: var(--white);
+            font-size: 24px;
         }
 
         .container {
-            background-color: white;
-            padding: 20px;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: var(--white);
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
-            min-height: calc(100vh - 40px);
-            box-sizing: border-box;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
+            box-shadow: 0 4px 6px var(--shadow);
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
         }
 
-        .form-group input,
-        .form-group select {
+        .form-group input {
             width: 100%;
-            padding: 8px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s ease;
             box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--shadow);
+        }
+
+        .form-group input:disabled {
+            background-color: var(--background);
+            cursor: not-allowed;
         }
 
         /* Table styling */
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #ddd;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            box-shadow: 0 2px 4px var(--shadow);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         th {
-            background-color: #f5f5f5;
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
         }
 
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f8fafc;
         }
 
         tr:hover {
-            background-color: #f5f5f5;
+            background-color: #f0f4f8;
         }
 
-        /* Button styling */
-        button {
-            background-color: #4CAF50;
-            color: white;
+        tr.selected {
+            background-color: rgba(26, 79, 124, 0.1);
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background-color: var(--secondary);
+            color: var(--white);
             padding: 10px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
             font-size: 14px;
-            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        button:hover {
-            background-color: #45a049;
+        .action-btn:hover {
+            transform: translateY(-1px);
         }
 
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            color: #666;
+        .action-btn.delete {
+            background-color: var(--error);
+        }
+
+        .action-btn.edit {
+            background-color: var(--warning);
+        }
+
+        .nav-btn {
+            background-color: transparent;
+            border: 2px solid var(--white);
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--white);
+            color: var(--primary);
         }
 
         /* Modal styles */
@@ -104,84 +176,139 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
+            animation: fadeIn 0.3s ease;
         }
 
         .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
+            background-color: var(--white);
+            margin: 5% auto;
+            padding: 30px;
             border-radius: 8px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--shadow);
         }
 
         .close {
             position: absolute;
             right: 20px;
-            top: 10px;
+            top: 20px;
             font-size: 24px;
             font-weight: bold;
-            color: #666;
+            color: var(--accent);
             cursor: pointer;
+            transition: color 0.3s ease;
         }
 
         .close:hover {
-            color: #000;
+            color: var(--primary);
         }
 
         .modal-buttons {
-            text-align: right;
-            margin-top: 20px;
-        }
-
-        .modal-buttons button {
-            margin-left: 10px;
-        }
-
-        /* Action buttons in table */
-        td button {
-            padding: 6px 12px;
-            margin: 0 4px;
-            font-size: 12px;
-        }
-
-        td button:first-child {
-            background-color: #ffc107;
-        }
-
-        td button:first-child:hover {
-            background-color: #e0a800;
-        }
-
-        td button:last-child {
-            background-color: #dc3545;
-        }
-
-        td button:last-child:hover {
-            background-color: #c82333;
-        }
-
-        /* Koefisien Input Styling */
-        .koefisien-container {
             display: flex;
-            align-items: center;
-            margin-top: 10px;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
         }
 
-        .koefisien-container input {
-            margin-right: 10px;
-            padding: 8px;
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        input[type="number"] {
             width: 100px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--shadow);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 15px;
+                padding: 15px;
+            }
+
+            th,
+            td {
+                padding: 10px;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
         }
     </style>
 </head>
 
 <body>
-    <button class="back-btn" onclick="goBack()">Kembali</button>
+    <div class="top-bar">
+        <button class="nav-btn" onclick="goBack()">← Kembali</button>
+        <h1>Rincian AHS</h1>
+        <div style="width: 80px"><!-- Spacer for alignment --></div>
+    </div>
 
     <div class="container">
-        <h1>Rincian AHS</h1>
         <div class="form-group">
             <label for="analisa-nama">Nama Analisa Harga Satuan Pekerjaan:</label>
             <input type="text" id="analisa-nama" placeholder="Klik untuk cari Analisa Harga Satuan Pekerjaan / ALT + P"
@@ -215,9 +342,15 @@
 
         <!-- Action buttons -->
         <div class="footer">
-            <button onclick="deleteMaterial()">Hapus</button>
-            <button onclick="editKoefisien()">Edit Koefisien</button>
-            <button onclick="addBahanUpah()">+ Bahan/Upah</button>
+            <button class="action-btn delete" onclick="deleteMaterial()">
+                <span>🗑</span> Hapus
+            </button>
+            <button class="action-btn edit" onclick="editKoefisien()">
+                <span>✏️</span> Edit Koefisien
+            </button>
+            <button class="action-btn" onclick="addBahanUpah()">
+                <span>+</span> Bahan/Upah
+            </button>
         </div>
     </div>
 
@@ -226,7 +359,10 @@
         <div class="modal-content">
             <span class="close" onclick="closeSearchAhsModal()">&times;</span>
             <h2>Cari AHS</h2>
-            <input type="text" id="searchAhsInput" placeholder="Cari AHS..." oninput="searchAhs()">
+            <div class="search-container">
+                <input type="text" id="searchAhsInput" class="search-input" placeholder="Cari AHS..."
+                    oninput="searchAhs()">
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -234,23 +370,27 @@
                         <th>Kode AHS</th>
                         <th>AHS</th>
                         <th>Satuan</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="ahsSearchResults"></tbody>
             </table>
             <div class="modal-buttons">
-                <button onclick="closeSearchAhsModal()">Batal</button>
+                <button class="action-btn" onclick="closeSearchAhsModal()"
+                    style="background-color: var(--accent)">Batal</button>
             </div>
         </div>
     </div>
+
     <!-- Modal for Searching Bahan/Upah -->
-    <!-- Modal untuk Searching Bahan/Upah -->
     <div id="searchMaterialModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeSearchMaterialModal()">&times;</span>
             <h2>Cari Bahan/Upah/Alat</h2>
-            <input type="text" id="searchMaterialInput" placeholder="Cari Bahan/Upah/Alat..."
-                oninput="searchMaterial()">
+            <div class="search-container">
+                <input type="text" id="searchMaterialInput" class="search-input" placeholder="Cari Bahan/Upah/Alat..."
+                    oninput="searchMaterial()">
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -258,21 +398,19 @@
                         <th>Satuan</th>
                         <th>Harga</th>
                         <th>Kategori</th>
-                        <th>Pilih</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="materialSearchResults"></tbody>
             </table>
             <div class="modal-buttons">
-                <button onclick="closeSearchMaterialModal()">Batal</button>
+                <button class="action-btn" onclick="closeSearchMaterialModal()"
+                    style="background-color: var(--accent)">Batal</button>
             </div>
         </div>
     </div>
 
-
-    <!-- Input for Koefisien inside the modal -->
+    <script src="rincian_ahs_renderer.js"></script>
 </body>
-
-<script src="rincian_ahs_renderer.js"></script>
 
 </html>
