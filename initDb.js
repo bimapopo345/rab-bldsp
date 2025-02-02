@@ -6,15 +6,14 @@ const db = new Database("database.sqlite", { verbose: console.log });
 
 // Create tables
 function initializeDatabase() {
-  // Menghapus tabel yang tidak diperlukan
-  // Menambahkan kolom koefisien pada tabel pricing
+  // Create pricing table
   db.exec(`
   CREATE TABLE IF NOT EXISTS pricing (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ahs_id INTEGER NOT NULL,
     material_id INTEGER NOT NULL,
     quantity REAL NOT NULL,
-    koefisien REAL NOT NULL,  -- Kolom baru untuk koefisien
+    koefisien REAL NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ahs_id) REFERENCES ahs(id),
     FOREIGN KEY (material_id) REFERENCES materials(id)
@@ -33,17 +32,15 @@ function initializeDatabase() {
     );
   `);
 
-  // Periksa apakah tabel AHS sudah ada
-  const ahsTableExists = db
-    .prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='ahs';"
-    )
-    .get();
-  if (ahsTableExists) {
-    console.log("Tabel AHS berhasil dibuat.");
-  } else {
-    console.log("Tabel AHS tidak ditemukan!");
-  }
+  // Create projects table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      location TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
   // Create admin table if it doesn't exist
   db.exec(`
@@ -55,14 +52,22 @@ function initializeDatabase() {
     );
   `);
 
+  // Verify tables exist
   const ahsTableExists = db
     .prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='ahs';"
     )
     .get();
-  console.log("AHS Table Exists:", ahsTableExists); // Debug log
+  console.log("AHS Table Exists:", ahsTableExists);
 
-  // Menambahkan admin default jika belum ada
+  const projectsTableExists = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='projects';"
+    )
+    .get();
+  console.log("Projects Table Exists:", projectsTableExists);
+
+  // Add default admin if none exists
   const existingAdmin = db.prepare("SELECT COUNT(*) AS count FROM admin").get();
   if (existingAdmin.count === 0) {
     db.prepare("INSERT INTO admin (username, password) VALUES (?, ?)").run(

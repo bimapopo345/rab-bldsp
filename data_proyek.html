@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Data Proyek - RAB Application</title>
+    <style>
+        :root {
+            --primary: #1a4f7c;
+            --secondary: #f26522;
+            --accent: #58595b;
+            --background: #f5f5f5;
+            --white: #ffffff;
+            --border: #dde1e4;
+            --shadow: rgba(26, 79, 124, 0.1);
+            --hover: #183f62;
+            --error: #dc3545;
+            --success: #28a745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--white);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--white);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--background);
+        }
+
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        .project-list {
+            margin-top: 30px;
+        }
+
+        .project-item {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background-color: var(--white);
+        }
+
+        .project-item h3 {
+            margin: 0 0 5px 0;
+            color: var(--primary);
+        }
+
+        .project-item p {
+            margin: 0;
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <h1>Data Proyek</h1>
+        <button class="btn btn-secondary" onclick="window.location.href='index.html'">Kembali</button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <form id="projectForm">
+                <div class="form-group">
+                    <label for="projectName">Nama Proyek</label>
+                    <input type="text" id="projectName" name="projectName" required>
+                </div>
+                <div class="form-group">
+                    <label for="projectLocation">Lokasi / Alamat Proyek</label>
+                    <input type="text" id="projectLocation" name="projectLocation" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="reset" class="btn btn-secondary">Reset</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="project-list" id="projectList">
+            <!-- Project items will be dynamically added here -->
+        </div>
+    </div>
+
+    <script src="data_proyek_renderer.js"></script>
+</body>
+
+</html>
