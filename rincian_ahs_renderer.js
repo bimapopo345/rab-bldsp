@@ -131,29 +131,30 @@ ipcRenderer.on("materials-data", (event, materials) => {
 
 // Select a material and display its details for further actions
 function selectMaterial(id, name, price) {
+  console.log("Material selected:", id, name, price); // Log the selected material details
+
   selectedMaterialId = id;
   document.getElementById("selectedMaterialName").innerText = name;
   document.getElementById("selectedMaterialPrice").innerText = `Rp ${price}`;
 
-  // Koefisien default di sini adalah 1
-  const koefisien = 1;
+  const koefisien = 1; // Default coefficient
+  const total = price * koefisien; // Calculate total
 
-  const total = price * koefisien; // Hitung total berdasarkan koefisien default
+  // Log total calculation
+  console.log("Total calculated: ", total);
 
-  // Menambahkan bahan ke dalam tabel rincian
   const tableBody = document.getElementById("materialDetails");
   const row = document.createElement("tr");
   row.innerHTML = `
-      <td>Bahan</td>
-      <td>${name}</td>
-      <td>kg</td> <!-- Satuan tetap kg, bisa disesuaikan -->
-      <td><input type="number" value="${koefisien}" onchange="updateKoefisien(${selectedMaterialId}, this.value)"></td>
-      <td>Rp ${price}</td>
-      <td>Rp ${total}</td>
+    <td>Bahan</td>
+    <td>${name}</td>
+    <td>kg</td>  
+    <td><input type="number" value="${koefisien}" onchange="updateKoefisien(${selectedMaterialId}, this.value)"></td>
+    <td>Rp ${price}</td>
+    <td>Rp ${total}</td>
   `;
   tableBody.appendChild(row);
 
-  // Kirim data ke backend untuk disimpan
   ipcRenderer.send("add-pricing", {
     ahs_id: selectedAhsId,
     material_id: selectedMaterialId,
@@ -161,7 +162,7 @@ function selectMaterial(id, name, price) {
     koefisien: koefisien,
   });
 
-  closeSearchMaterialModal(); // Menutup modal setelah pemilihan
+  closeSearchMaterialModal(); // Close the modal after selection
 }
 
 function addMaterialToTable() {
@@ -210,7 +211,11 @@ function closeKoefisienModal() {
 
 // Close the material search modal
 function closeSearchMaterialModal() {
-  document.getElementById("searchMaterialModal").style.display = "none";
+  const modal = document.getElementById("searchMaterialModal");
+  if (modal) {
+    console.log("Closing search material modal.");
+    modal.style.display = "none"; // Close the modal after a selection
+  }
 }
 
 function updateKoefisien(materialId, newKoefisien) {
