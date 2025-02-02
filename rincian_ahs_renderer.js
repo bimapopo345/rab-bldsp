@@ -86,7 +86,8 @@ function selectAhs(id) {
   ipcRenderer.send("get-pricing", { ahsId: id, userId });
 }
 
-ipcRenderer.on("pricing-data", (event, pricingData) => {
+// Display pricing data in table
+function displayPricingData(pricingData) {
   const tableBody = document.getElementById("materialDetails");
   tableBody.innerHTML = "";
 
@@ -95,16 +96,24 @@ ipcRenderer.on("pricing-data", (event, pricingData) => {
     const row = document.createElement("tr");
     row.dataset.pricingId = item.id;
     row.dataset.materialId = item.material_id;
+    row.dataset.materialPrice = item.price;
     row.innerHTML = `
       <td>Bahan</td>
       <td>${item.name}</td>
       <td>${item.unit}</td>
-      <td><input type="number" value="${item.koefisien}" onchange="updateKoefisien(${item.material_id}, this.value)"></td>
-      <td>Rp ${item.price}</td>
-      <td>Rp ${total}</td>
+      <td><input type="number" value="${
+        item.koefisien
+      }" onchange="updateKoefisien(this)"></td>
+      <td>Rp ${item.price.toLocaleString()}</td>
+      <td>Rp ${total.toLocaleString()}</td>
     `;
     tableBody.appendChild(row);
   });
+}
+
+// Handle pricing data updates
+ipcRenderer.on("pricing-data", (event, pricingData) => {
+  displayPricingData(pricingData);
 });
 
 ipcRenderer.on("ahs-data-for-edit", (event, ahs) => {
@@ -167,32 +176,37 @@ ipcRenderer.on("materials-data", (event, materials) => {
     row.innerHTML = `
         <td>${material.name}</td>
         <td>${material.unit}</td>
-        <td>Rp ${material.price}</td>
+        <td>Rp ${material.price.toLocaleString()}</td>
         <td>${material.category}</td>
-        <td><button onclick="selectMaterial(${material.id}, '${material.name}', ${material.price})">Pilih</button></td>
+        <td><button onclick="selectMaterial(${
+          material.id
+        }, '${material.name.replace("'", "\\'")}', ${material.price}, '${
+      material.unit
+    }')">Pilih</button></td>
       `;
     tableBody.appendChild(row);
   });
 });
 
-function selectMaterial(id, name, price) {
+function selectMaterial(id, name, price, unit) {
   const userId = checkAuth();
   if (!userId) return;
 
   selectedMaterialId = id;
   const koefisien = 1;
-
   const total = price * koefisien;
 
   const tableBody = document.getElementById("materialDetails");
   const row = document.createElement("tr");
+  row.dataset.materialId = id;
+  row.dataset.materialPrice = price;
   row.innerHTML = `
     <td>Bahan</td>
     <td>${name}</td>
-    <td>kg</td>  
-    <td><input type="number" value="${koefisien}" onchange="updateKoefisien(${selectedMaterialId}, this.value)"></td>
-    <td>Rp ${price}</td>
-    <td>Rp ${total}</td>
+    <td>${unit}</td>  
+    <td><input type="number" value="${koefisien}" onchange="updateKoefisien(this)"></td>
+    <td>Rp ${price.toLocaleString()}</td>
+    <td>Rp ${total.toLocaleString()}</td>
   `;
   tableBody.appendChild(row);
 
@@ -207,35 +221,57 @@ function selectMaterial(id, name, price) {
   closeSearchMaterialModal();
 }
 
-function updateKoefisien(materialId, newKoefisien) {
+// Handle successful pricing addition
+ipcRenderer.on("pricing-added", (event, response) => {
+  if (response && response.error) {
+    alert("Error: " + response.error);
+  } else {
+    // Refresh pricing data
+    const userId = checkAuth();
+    if (userId) {
+      ipcRenderer.send("get-pricing", { ahsId: selectedAhsId, userId });
+    }
+  }
+});
+
+function updateKoefisien(input) {
   const userId = checkAuth();
   if (!userId) return;
-
-  const input = document.querySelector(
-    `input[onchange*="updateKoefisien(${materialId}"]`
-  );
-  if (!input) return;
 
   const row = input.closest("tr");
   if (!row) return;
 
-  const pricingId = parseInt(row.dataset.pricingId, 10);
+  const materialPrice = parseFloat(row.dataset.materialPrice);
+  const newKoefisien = parseFloat(input.value);
+  const newTotal = materialPrice * newKoefisien;
+
+  // Update total cell immediately
+  const totalCell = row.cells[5];
+  totalCell.textContent = `Rp ${newTotal.toLocaleString()}`;
+
+  // Get pricing ID from dataset
+  const pricingId = row.dataset.pricingId;
   if (!pricingId) return;
 
-  const cells = row.getElementsByTagName("td");
-  const price = parseFloat(cells[4].innerText.replace("Rp ", ""));
-  const totalCell = cells[5];
-  const newTotal = price * newKoefisien;
-
-  totalCell.innerText = `Rp ${newTotal}`;
-
   ipcRenderer.send("update-pricing", {
-    pricing_id: pricingId,
+    pricing_id: parseInt(pricingId, 10),
     ahs_id: parseInt(selectedAhsId, 10),
-    koefisien: parseFloat(newKoefisien),
+    koefisien: newKoefisien,
     userId,
   });
 }
+
+// Handle pricing update response
+ipcRenderer.on("pricing-updated", (event, response) => {
+  if (response && response.error) {
+    alert("Error: " + response.error);
+    // Refresh pricing data on error to ensure UI is in sync
+    const userId = checkAuth();
+    if (userId) {
+      ipcRenderer.send("get-pricing", { ahsId: selectedAhsId, userId });
+    }
+  }
+});
 
 function initializeMaterialTable() {
   const materialTable = document.getElementById("materialDetails");
@@ -270,12 +306,6 @@ function deleteMaterial() {
 ipcRenderer.on("pricing-deleted", (event, response) => {
   if (response && response.error) {
     alert("Gagal menghapus: " + response.error);
-  }
-});
-
-ipcRenderer.on("pricing-updated", (event, response) => {
-  if (response && response.error) {
-    alert("Gagal mengupdate: " + response.error);
   }
 });
 
