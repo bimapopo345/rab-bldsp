@@ -11,7 +11,7 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
-            AND m.category != 'Upah'
+            AND LOWER(m.category) != 'upah'
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
@@ -38,7 +38,7 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
-            AND m.category != 'Upah'
+            AND LOWER(m.category) != 'upah'
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
@@ -76,7 +76,7 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
-            AND m.category = 'Upah'
+            AND LOWER(m.category) = 'upah'
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
@@ -86,6 +86,7 @@ function setupCalculatorHandlers(ipcMain, db) {
         event.reply("wage-summary-data", []);
         return;
       }
+      console.log("Wage data found:", rows.length, "items"); // Debug log
       event.reply("wage-summary-data", rows);
     });
   });
@@ -103,7 +104,7 @@ function setupCalculatorHandlers(ipcMain, db) {
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
             WHERE p.koefisien IS NOT NULL
-            AND m.category = 'Upah'
+            AND LOWER(m.category) = 'upah'
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
@@ -113,6 +114,8 @@ function setupCalculatorHandlers(ipcMain, db) {
         event.reply("wage-detail-data", {});
         return;
       }
+
+      console.log("Wage detail data found:", rows.length, "items"); // Debug log
 
       // Group the results by kelompok
       const groupedData = rows.reduce((acc, row) => {
