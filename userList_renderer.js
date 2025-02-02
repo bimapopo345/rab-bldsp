@@ -29,10 +29,16 @@ ipcRenderer.on("admin-check-result", (event, isAdmin) => {
   if (!isAdmin) {
     window.location.href = "index.html";
   } else {
-    // Show admin-only database actions
+    // If user is admin, show database actions
     document.getElementById("adminActions").style.display = "flex";
     setupDatabaseHandlers();
   }
+});
+
+// Handle users data
+ipcRenderer.on("users-data", (event, users) => {
+  hideLoading();
+  displayUsers(users);
 });
 
 function setupDatabaseHandlers() {
@@ -75,12 +81,6 @@ function setupDatabaseHandlers() {
     });
 }
 
-// Handle users data
-ipcRenderer.on("users-data", (event, users) => {
-  hideLoading();
-  displayUsers(users);
-});
-
 function displayUsers(users) {
   const tableBody = document.getElementById("userTableBody");
   tableBody.innerHTML = "";
@@ -95,9 +95,35 @@ function displayUsers(users) {
       <td>${user.username}</td>
       <td>${user.password}</td>
       <td>${user.hint}</td>
+      <td>
+        <div class="user-actions">
+          <button class="user-action-btn" onclick="exportUserData('${user.username}')">Export</button>
+        </div>
+      </td>
     `;
     tableBody.appendChild(row);
   });
+}
+
+async function exportUserData(username) {
+  showLoading();
+  try {
+    // First get the user ID
+    const user = await new Promise((resolve, reject) => {
+      ipcRenderer.send("get-user-id", username);
+      ipcRenderer.once("user-id-result", (event, result) => {
+        if (result.error) reject(new Error(result.error));
+        else resolve(result);
+      });
+    });
+
+    const result = await ipcRenderer.invoke("export-my-data", user.id);
+    alert(result.message);
+  } catch (error) {
+    alert("Error mengekspor data user: " + error.message);
+  } finally {
+    hideLoading();
+  }
 }
 
 function showLoading() {

@@ -13,11 +13,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load project information
   loadProjectInfo(userId);
 
-  // Add export/import buttons for non-admin users
+  // Handle admin features
   ipcRenderer.on("admin-check-result", (event, isAdmin) => {
-    if (!isAdmin) {
-      // Add user export/import buttons
-      const container = document.querySelector(".container");
+    const container = document.querySelector(".container");
+    const menuGrid = document.querySelector(".menu-grid");
+
+    if (isAdmin) {
+      // Add User Management card for admin
+      const userManagementCard = document.createElement("div");
+      userManagementCard.className = "menu-card";
+      userManagementCard.onclick = () =>
+        (window.location.href = "userList.html");
+      userManagementCard.innerHTML = `
+        <div class="icon-container">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        <h3 class="menu-title">Manajemen User</h3>
+        <p class="menu-description">Kelola pengguna dan database sistem</p>
+      `;
+      menuGrid.appendChild(userManagementCard);
+    } else {
+      // Add user export/import buttons for non-admin
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "user-data-actions";
       actionsDiv.style.cssText =
@@ -35,29 +53,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
       actionsDiv.appendChild(exportBtn);
       actionsDiv.appendChild(importBtn);
-
-      // Insert before first element in container
       container.insertBefore(actionsDiv, container.firstChild);
-
-      // Add styles for buttons
-      const style = document.createElement("style");
-      style.textContent = `
-        .action-btn {
-          background-color: #1a4f7c;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: background-color 0.3s;
-        }
-        .action-btn:hover {
-          background-color: #16426a;
-        }
-      `;
-      document.head.appendChild(style);
     }
+
+    // Add styles for buttons
+    const style = document.createElement("style");
+    style.textContent = `
+      .action-btn {
+        background-color: #1a4f7c;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+      }
+      .action-btn:hover {
+        background-color: #16426a;
+      }
+    `;
+    document.head.appendChild(style);
   });
 });
 

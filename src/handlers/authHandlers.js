@@ -149,7 +149,7 @@ function setupAuthHandlers(ipcMain, db) {
   // Get all users
   ipcMain.on("get-users", (event) => {
     db.all(
-      "SELECT username, password, hint FROM users ORDER BY username",
+      "SELECT id, username, password, hint FROM users ORDER BY username",
       [],
       (err, users) => {
         if (err) {
