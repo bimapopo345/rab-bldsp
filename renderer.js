@@ -37,13 +37,24 @@ function attemptRegister() {
 function attemptReset() {
   const username = document.getElementById("resetUsername").value;
   const hint = document.getElementById("resetHint").value;
+  const newPassword = document.getElementById("resetPassword").value;
+  const confirmPassword = document.getElementById("resetConfirmPassword").value;
 
-  if (!username || !hint) {
-    showError("Mohon isi username dan hint");
+  if (!username || !hint || !newPassword || !confirmPassword) {
+    showError("Mohon isi semua field");
     return;
   }
 
-  ipcRenderer.send("reset-password", { username, hint });
+  if (newPassword !== confirmPassword) {
+    showError("Password baru tidak cocok");
+    return;
+  }
+
+  ipcRenderer.send("reset-password", {
+    username,
+    hint,
+    newPassword,
+  });
 }
 
 // IPC response listeners
@@ -73,12 +84,14 @@ ipcRenderer.on("register-result", (event, result) => {
 
 ipcRenderer.on("reset-result", (event, result) => {
   if (result.success) {
-    showSuccess(result.message);
-    // Switch back to login form after showing new password
+    showSuccess(
+      "Password berhasil direset. Silakan login dengan password baru."
+    );
+    // Switch back to login form after showing success message
     setTimeout(() => {
       showLoginForm();
       clearFormInputs("resetForm");
-    }, 5000);
+    }, 3000);
   } else {
     showError(result.message);
   }

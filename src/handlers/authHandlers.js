@@ -79,7 +79,15 @@ function setupAuthHandlers(ipcMain, db) {
   });
 
   // Password reset request handler
-  ipcMain.on("reset-password", (event, { username, hint }) => {
+  ipcMain.on("reset-password", (event, { username, hint, newPassword }) => {
+    if (!newPassword) {
+      event.reply("reset-result", {
+        success: false,
+        message: "Password baru diperlukan",
+      });
+      return;
+    }
+
     db.get(
       "SELECT * FROM users WHERE username = ? AND hint = ?",
       [username, hint],
@@ -96,15 +104,12 @@ function setupAuthHandlers(ipcMain, db) {
         if (!user) {
           event.reply("reset-result", {
             success: false,
-            message: "Invalid username or hint",
+            message: "Username atau hint tidak valid",
           });
           return;
         }
 
-        // Generate a simple random password
-        const newPassword = Math.random().toString(36).slice(2, 10);
-
-        // Update the user's password
+        // Update the user's password with their new password
         db.run(
           "UPDATE users SET password = ? WHERE id = ?",
           [newPassword, user.id],
@@ -120,8 +125,7 @@ function setupAuthHandlers(ipcMain, db) {
 
             event.reply("reset-result", {
               success: true,
-              message: `Your new password is: ${newPassword}`,
-              password: newPassword,
+              message: "Password berhasil direset",
             });
           }
         );
