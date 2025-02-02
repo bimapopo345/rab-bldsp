@@ -239,6 +239,7 @@ ipcMain.on("get-ahs", (event) => {
 // Get AHS by ID
 // Get AHS data by ID for autofill
 // Mendapatkan AHS berdasarkan ID
+// Mendapatkan data AHS berdasarkan ID
 ipcMain.on("get-ahs-by-id", (event, id) => {
   try {
     const ahs = db.prepare("SELECT * FROM ahs WHERE id = ?").get(id);
