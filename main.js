@@ -334,13 +334,68 @@ ipcMain.on("get-pricing", (event, ahs_id) => {
   }
 });
 
-ipcMain.on("delete-pricing", (event, id) => {
+ipcMain.on("delete-pricing", (event, pricingId) => {
   try {
-    db.prepare("DELETE FROM pricing WHERE id = ?").run(id);
+    // Get AHS ID before deleting
+    const pricing = db
+      .prepare("SELECT ahs_id FROM pricing WHERE id = ?")
+      .get(pricingId);
+
+    if (!pricing) {
+      throw new Error("Pricing not found");
+    }
+
+    const ahs_id = parseInt(pricing.ahs_id, 10); // Ensure integer
+
+    // Delete the pricing entry
+    db.prepare("DELETE FROM pricing WHERE id = ?").run(pricingId);
+
+    // After deletion, fetch and send updated pricing data
+    const updatedPricing = db
+      .prepare(
+        `
+        SELECT p.*, m.name, m.unit, m.price
+        FROM pricing p
+        JOIN materials m ON p.material_id = m.id
+        WHERE p.ahs_id = ?
+      `
+      )
+      .all(ahs_id);
+
+    event.reply("pricing-data", updatedPricing);
     event.reply("pricing-deleted");
   } catch (err) {
     console.error("Error deleting pricing:", err);
     event.reply("pricing-deleted", { error: err.message });
+  }
+});
+
+// Update pricing
+ipcMain.on("update-pricing", (event, { pricing_id, ahs_id, koefisien }) => {
+  try {
+    // Update the pricing entry using pricing_id
+    db.prepare("UPDATE pricing SET koefisien = ? WHERE id = ?").run(
+      koefisien,
+      pricing_id
+    );
+
+    // After update, fetch and send updated pricing data
+    const updatedPricing = db
+      .prepare(
+        `
+        SELECT p.*, m.name, m.unit, m.price
+        FROM pricing p
+        JOIN materials m ON p.material_id = m.id
+        WHERE p.ahs_id = ?
+      `
+      )
+      .all(ahs_id);
+
+    event.reply("pricing-data", updatedPricing);
+    event.reply("pricing-updated");
+  } catch (err) {
+    console.error("Error updating pricing:", err);
+    event.reply("pricing-updated", { error: err.message });
   }
 });
 

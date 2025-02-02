@@ -66,6 +66,8 @@ ipcRenderer.on("pricing-data", (event, pricingData) => {
   pricingData.forEach((item) => {
     const total = item.price * item.koefisien;
     const row = document.createElement("tr");
+    row.dataset.pricingId = item.id; // Store pricing ID in the row
+    row.dataset.materialId = item.material_id; // Store material ID in the row
     row.innerHTML = `
       <td>Bahan</td>
       <td>${item.name}</td>
@@ -174,9 +176,13 @@ function updateKoefisien(materialId, newKoefisien) {
   if (!input) return;
 
   const row = input.closest("tr");
-  const cells = row.getElementsByTagName("td");
+  if (!row) return;
+
+  const pricingId = parseInt(row.dataset.pricingId, 10);
+  if (!pricingId) return;
 
   // Get price from the price cell (index 4) and remove the "Rp " prefix
+  const cells = row.getElementsByTagName("td");
   const price = parseFloat(cells[4].innerText.replace("Rp ", ""));
   const totalCell = cells[5];
   const newTotal = price * newKoefisien;
@@ -186,9 +192,9 @@ function updateKoefisien(materialId, newKoefisien) {
 
   // Send update to main process
   ipcRenderer.send("update-pricing", {
-    ahs_id: selectedAhsId,
-    material_id: materialId,
-    koefisien: newKoefisien,
+    pricing_id: pricingId,
+    ahs_id: parseInt(selectedAhsId, 10),
+    koefisien: parseFloat(newKoefisien),
   });
 }
 
@@ -216,17 +222,25 @@ function deleteMaterial() {
     return;
   }
 
-  // Get the material ID from the koefisien input's onchange attribute
-  const koefisienInput = selectedRow.querySelector('input[type="number"]');
-  const match = koefisienInput
-    .getAttribute("onchange")
-    .match(/updateKoefisien\((\d+)/);
-  if (match) {
-    const materialId = match[1];
-    ipcRenderer.send("delete-pricing", materialId);
-    selectedRow.remove();
+  // Get the pricing ID directly from the row's dataset
+  const pricingId = selectedRow.dataset.pricingId;
+  if (pricingId) {
+    ipcRenderer.send("delete-pricing", parseInt(pricingId, 10)); // Convert to integer
   }
 }
+
+// Add listeners for deletion and update responses
+ipcRenderer.on("pricing-deleted", (event, response) => {
+  if (response && response.error) {
+    alert("Gagal menghapus: " + response.error);
+  }
+});
+
+ipcRenderer.on("pricing-updated", (event, response) => {
+  if (response && response.error) {
+    alert("Gagal mengupdate: " + response.error);
+  }
+});
 
 function editKoefisien() {
   const selectedRow = document.querySelector("#materialDetails tr.selected");
