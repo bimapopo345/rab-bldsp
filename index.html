@@ -134,6 +134,32 @@
             color: var(--white);
         }
 
+        .project-info {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .project-info h2 {
+            color: var(--primary);
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+
+        .project-info p {
+            margin: 8px 0;
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        .project-info .label {
+            font-weight: 500;
+            color: var(--primary);
+        }
+
         @media (max-width: 768px) {
             .menu-grid {
                 grid-template-columns: 1fr;
@@ -153,6 +179,14 @@
     </div>
 
     <div class="container">
+        <div id="projectInfo" class="project-info">
+            <h2>Informasi Proyek</h2>
+            <div id="projectDetails">
+                <!-- Project details will be loaded here -->
+                <p>Loading project information...</p>
+            </div>
+        </div>
+
         <div class="menu-grid">
             <!-- Material & Upah -->
             <div class="menu-card" onclick="window.location.href='material_upah.html'">
@@ -252,11 +286,7 @@
         </div>
     </div>
 
-    <script>
-        function logout() {
-            window.location.href = 'login.html';
-        }
-    </script>
+    <script src="index_renderer.js"></script>
 </body>
 
 </html>

@@ -116,26 +116,29 @@
             gap: 10px;
         }
 
-        .project-list {
+        .current-project {
             margin-top: 30px;
-        }
-
-        .project-item {
-            padding: 15px;
-            border: 1px solid var(--border);
+            padding: 20px;
+            background-color: var(--background);
             border-radius: 6px;
-            margin-bottom: 10px;
-            background-color: var(--white);
+            border: 1px solid var(--border);
         }
 
-        .project-item h3 {
-            margin: 0 0 5px 0;
+        .current-project h3 {
             color: var(--primary);
+            margin: 0 0 15px 0;
         }
 
-        .project-item p {
-            margin: 0;
+        .current-project p {
+            margin: 8px 0;
             color: var(--accent);
+        }
+
+        .page-description {
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -148,6 +151,11 @@
 
     <div class="container">
         <div class="card">
+            <p class="page-description">
+                Halaman ini digunakan untuk mengatur informasi proyek yang sedang aktif.
+                Perubahan yang disimpan akan langsung diperbarui di sistem.
+            </p>
+
             <form id="projectForm">
                 <div class="form-group">
                     <label for="projectName">Nama Proyek</label>
@@ -158,14 +166,14 @@
                     <input type="text" id="projectLocation" name="projectLocation" required>
                 </div>
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                     <button type="reset" class="btn btn-secondary">Reset</button>
                 </div>
             </form>
         </div>
 
-        <div class="project-list" id="projectList">
-            <!-- Project items will be dynamically added here -->
+        <div id="projectList" class="current-project">
+            <!-- Current project info will be shown here -->
         </div>
     </div>
 

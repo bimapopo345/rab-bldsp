@@ -10,46 +10,36 @@ function initializeDB() {
   try {
     db = new Database(dbPath, { verbose: console.log });
     console.log("Connected to database");
-    createProjectTable();
+    loadProject();
   } catch (err) {
     console.error("Error connecting to database:", err);
   }
 }
 
-// Create projects table if it doesn't exist
-function createProjectTable() {
+// Load current project if it exists
+function loadProject() {
   try {
-    db.exec(`
-            CREATE TABLE IF NOT EXISTS projects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                location TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-    loadProjects();
+    const stmt = db.prepare(
+      "SELECT * FROM projects ORDER BY created_at DESC LIMIT 1"
+    );
+    const project = stmt.get();
+    if (project) {
+      // Fill form with existing project data
+      document.getElementById("projectName").value = project.name;
+      document.getElementById("projectLocation").value = project.location;
+      displayProject(project);
+    }
   } catch (err) {
-    console.error("Error creating projects table:", err);
+    console.error("Error loading project:", err);
   }
 }
 
-// Load all projects
-function loadProjects() {
-  try {
-    const stmt = db.prepare("SELECT * FROM projects ORDER BY created_at DESC");
-    const projects = stmt.all();
-    displayProjects(projects);
-  } catch (err) {
-    console.error("Error loading projects:", err);
-  }
-}
-
-// Display projects in the UI
-function displayProjects(projects) {
+// Display project in the UI
+function displayProject(project) {
   const projectList = document.getElementById("projectList");
   projectList.innerHTML = "";
 
-  projects.forEach((project) => {
+  if (project) {
     const projectItem = document.createElement("div");
     projectItem.className = "project-item";
     projectItem.innerHTML = `
@@ -57,7 +47,7 @@ function displayProjects(projects) {
             <p>Lokasi: ${project.location}</p>
         `;
     projectList.appendChild(projectItem);
-  });
+  }
 }
 
 // Form submission handler
@@ -75,21 +65,41 @@ document.getElementById("projectForm").addEventListener("submit", (e) => {
   }
 
   try {
-    const stmt = db.prepare(
-      "INSERT INTO projects (name, location) VALUES (?, ?)"
-    );
-    const result = stmt.run(projectName, projectLocation);
+    // Check if project exists
+    const existingProject = db
+      .prepare("SELECT * FROM projects ORDER BY created_at DESC LIMIT 1")
+      .get();
 
-    if (result.changes > 0) {
-      alert("Data proyek berhasil disimpan");
-      document.getElementById("projectForm").reset();
-      loadProjects();
+    if (existingProject) {
+      // Update existing project
+      const stmt = db.prepare(
+        "UPDATE projects SET name = ?, location = ? WHERE id = ?"
+      );
+      const result = stmt.run(projectName, projectLocation, existingProject.id);
+
+      if (result.changes > 0) {
+        alert("Data proyek berhasil diperbarui");
+        loadProject(); // Reload project data
+      } else {
+        alert("Terjadi kesalahan saat memperbarui data proyek");
+      }
     } else {
-      alert("Terjadi kesalahan saat menyimpan data proyek");
+      // Create new project if none exists
+      const stmt = db.prepare(
+        "INSERT INTO projects (name, location) VALUES (?, ?)"
+      );
+      const result = stmt.run(projectName, projectLocation);
+
+      if (result.changes > 0) {
+        alert("Data proyek berhasil disimpan");
+        loadProject(); // Reload project data
+      } else {
+        alert("Terjadi kesalahan saat menyimpan data proyek");
+      }
     }
   } catch (err) {
     console.error("Error saving project:", err);
-    alert("Terjadi kesalahan saat menyimpan data proyek");
+    alert("Terjadi kesalahan saat menyimpan/memperbarui data proyek");
   }
 });
 
