@@ -48,7 +48,7 @@ function initDatabase() {
     ahs_id INTEGER NOT NULL,
     material_id INTEGER NOT NULL,
     quantity REAL NOT NULL,
-    koefisien REAL NOT NULL,  -- Kolom koefisien yang baru
+    koefisien REAL NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ahs_id) REFERENCES ahs(id),
     FOREIGN KEY (material_id) REFERENCES materials(id)
@@ -148,14 +148,11 @@ ipcMain.on("login", (event, { username, password }) => {
 });
 
 // Get all materials
+// Fetch materials
 ipcMain.on("get-materials", (event) => {
   try {
-    const materials = db
-      .prepare("SELECT * FROM materials ORDER BY created_at DESC")
-      .all();
+    const materials = db.prepare("SELECT * FROM materials").all();
     event.reply("materials-data", materials);
-    // Tell renderer to focus search input
-    event.reply("focus-search");
   } catch (err) {
     console.error("Error fetching materials:", err);
     event.reply("materials-data", []);
@@ -227,9 +224,10 @@ ipcMain.on("update-material", (event, { id, name, unit, price, category }) => {
 });
 
 // Get all AHS
+// Fetch AHS
 ipcMain.on("get-ahs", (event) => {
   try {
-    const ahs = db.prepare("SELECT * FROM ahs ORDER BY kode_ahs ASC").all();
+    const ahs = db.prepare("SELECT * FROM ahs").all();
     event.reply("ahs-data", ahs);
   } catch (err) {
     console.error("Error fetching AHS:", err);
@@ -296,6 +294,7 @@ ipcMain.on("delete-ahs", (event, id) => {
 
 // Add pricing calculation handlers
 // Menambahkan pricing dengan koefisien
+// Add pricing data to the database
 ipcMain.on(
   "add-pricing",
   (event, { ahs_id, material_id, quantity, koefisien }) => {
@@ -303,7 +302,8 @@ ipcMain.on(
       const stmt = db.prepare(
         "INSERT INTO pricing (ahs_id, material_id, quantity, koefisien) VALUES (?, ?, ?, ?)"
       );
-      stmt.run(ahs_id, material_id, quantity, koefisien); // Menyimpan koefisien
+      const result = stmt.run(ahs_id, material_id, quantity, koefisien);
+      console.log("Inserted pricing:", result);
       event.reply("pricing-added");
     } catch (err) {
       console.error("Error adding pricing:", err);
