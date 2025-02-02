@@ -385,7 +385,7 @@
     <!-- Modal untuk menambah material baru -->
     <div id="addMaterialModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closeAddModal()">&times;</span>
             <h2 style="color: var(--primary); margin-bottom: 25px;">Tambah Material/Upah Baru</h2>
             <div class="form-group">
                 <label for="newName">Nama:</label>
@@ -408,7 +408,8 @@
                 </select>
             </div>
             <div class="modal-buttons">
-                <button class="action-btn" onclick="closeModal()" style="background-color: var(--accent)">Batal</button>
+                <button class="action-btn" onclick="closeAddModal()"
+                    style="background-color: var(--accent)">Batal</button>
                 <button class="action-btn" onclick="saveMaterial()"
                     style="background-color: var(--success)">Simpan</button>
             </div>
