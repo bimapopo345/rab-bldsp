@@ -7,7 +7,7 @@ async function addDetailedMaterialSheet(workbook, db) {
     const columns = [
       { header: "Kelompok", key: "kelompok", width: 20 },
       { header: "Kode AHS", key: "kode_ahs", width: 15 },
-      { header: "Uraian AHS", key: "uraian", width: 40 },
+      { header: "Uraian", key: "uraian", width: 40 },
       { header: "Nama Material", key: "material_name", width: 30 },
       { header: "Satuan", key: "satuan", width: 12 },
       { header: "Kuantitas", key: "kuantitas", width: 12 },
@@ -29,49 +29,17 @@ async function addDetailedMaterialSheet(workbook, db) {
     titleCell.alignment = { horizontal: "center", vertical: "middle" };
     sheet.getRow(1).height = 30;
 
-    // Add column labels (A-H)
-    const labelRow = sheet.getRow(2);
-    const labels = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    labels.forEach((label, idx) => {
-      labelRow.getCell(idx + 1).value = label;
+    // Add column headers
+    sheet.columns.forEach((column, idx) => {
+      const cell = sheet.getRow(2).getCell(idx + 1);
+      cell.value = column.header;
+      cell.style = {
+        ...STYLES.header,
+        border: BORDERS,
+        alignment: { horizontal: "center", vertical: "middle" },
+      };
     });
-    labelRow.height = 20;
-    labelRow.eachCell((cell) => {
-      Object.assign(cell, STYLES.header);
-      cell.border = BORDERS;
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.font = { ...cell.font, bold: true };
-    });
-
-    // Add category headers without merging
-    const categoryRow = sheet.getRow(3);
-    const categories = [
-      "Informasi AHS", // A
-      "Informasi AHS", // B
-      "Informasi Material", // C
-      "Informasi Material", // D
-      "Informasi Harga", // E
-      "Informasi Harga", // F
-      "Informasi Harga", // G
-      "Informasi Harga", // H
-    ];
-    categories.forEach((category, idx) => {
-      categoryRow.getCell(idx + 1).value = category;
-    });
-    categoryRow.height = 25;
-    categoryRow.eachCell((cell) => {
-      Object.assign(cell, STYLES.header);
-      cell.border = BORDERS;
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-    });
-
-    // Style header row
-    const headerRow = sheet.getRow(4);
-    headerRow.height = 25;
-    headerRow.eachCell((cell) => {
-      Object.assign(cell, STYLES.header);
-      cell.border = BORDERS;
-    });
+    sheet.getRow(2).height = 25;
 
     const query = `
             SELECT 
