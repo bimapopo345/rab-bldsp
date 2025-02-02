@@ -3,10 +3,28 @@ const { ipcRenderer } = require("electron");
 let selectedMaterialId = null;
 let selectedAhsId = null;
 
+// Check if user is logged in
+function checkAuth() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "login.html";
+    return null;
+  }
+  return userId;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
+  initializeMaterialTable();
+});
+
 function openAhsModal() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const modal = document.getElementById("searchAhsModal");
-  modal.style.display = "block"; // Pastikan modal ditampilkan
-  loadAhs(); // Kirim permintaan untuk mengambil data AHS
+  modal.style.display = "block";
+  loadAhs();
 }
 
 function closeSearchAhsModal() {
@@ -15,16 +33,23 @@ function closeSearchAhsModal() {
 }
 
 function loadAhs() {
-  ipcRenderer.send("get-ahs");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-ahs", { userId });
 }
 
 function searchAhs() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const searchInput = document
     .getElementById("searchAhsInput")
     .value.trim()
     .toLowerCase();
-  ipcRenderer.send("search-ahs", searchInput); // Kirim pencarian ke main process
+  ipcRenderer.send("search-ahs", { searchTerm: searchInput, userId });
 }
+
 ipcRenderer.on("ahs-data", (event, ahs) => {
   const searchInput = document
     .getElementById("searchAhsInput")
@@ -53,21 +78,23 @@ ipcRenderer.on("ahs-data", (event, ahs) => {
 });
 
 function selectAhs(id) {
-  selectedAhsId = id; // Set AHS ID yang dipilih
-  ipcRenderer.send("get-ahs-by-id", id); // Mengambil data AHS berdasarkan id yang dipilih
-  ipcRenderer.send("get-pricing", id); // Mengambil data pricing untuk AHS ini
+  const userId = checkAuth();
+  if (!userId) return;
+
+  selectedAhsId = id;
+  ipcRenderer.send("get-ahs-by-id", { id, userId });
+  ipcRenderer.send("get-pricing", { ahsId: id, userId });
 }
 
-// Tambahkan event listener untuk menerima data pricing
 ipcRenderer.on("pricing-data", (event, pricingData) => {
   const tableBody = document.getElementById("materialDetails");
-  tableBody.innerHTML = ""; // Clear existing data
+  tableBody.innerHTML = "";
 
   pricingData.forEach((item) => {
     const total = item.price * item.koefisien;
     const row = document.createElement("tr");
-    row.dataset.pricingId = item.id; // Store pricing ID in the row
-    row.dataset.materialId = item.material_id; // Store material ID in the row
+    row.dataset.pricingId = item.id;
+    row.dataset.materialId = item.material_id;
     row.innerHTML = `
       <td>Bahan</td>
       <td>${item.name}</td>
@@ -81,16 +108,18 @@ ipcRenderer.on("pricing-data", (event, pricingData) => {
 });
 
 ipcRenderer.on("ahs-data-for-edit", (event, ahs) => {
-  console.log("Received AHS data for edit:", ahs); // Periksa data AHS yang diterima
   if (ahs) {
     document.getElementById("kelompok-pekerjaan").value = ahs.kelompok;
     document.getElementById("satuan").value = ahs.satuan;
     document.getElementById("analisa-nama").value = ahs.ahs;
-    closeSearchAhsModal(); // Menutup modal setelah data AHS diterima
+    closeSearchAhsModal();
   }
 });
 
 function addBahanUpah() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const modal = document.getElementById("searchMaterialModal");
   modal.style.display = "block";
   loadMaterials();
@@ -102,15 +131,21 @@ function closeSearchMaterialModal() {
 }
 
 function loadMaterials() {
-  ipcRenderer.send("get-materials");
+  const userId = checkAuth();
+  if (!userId) return;
+
+  ipcRenderer.send("get-materials", { userId });
 }
 
 function searchMaterial() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const searchInput = document
     .getElementById("searchMaterialInput")
     .value.trim()
     .toLowerCase();
-  ipcRenderer.send("search-materials", searchInput);
+  ipcRenderer.send("search-materials", { searchTerm: searchInput, userId });
 }
 
 ipcRenderer.on("materials-data", (event, materials) => {
@@ -141,8 +176,11 @@ ipcRenderer.on("materials-data", (event, materials) => {
 });
 
 function selectMaterial(id, name, price) {
-  selectedMaterialId = id; // Set selected material ID
-  const koefisien = 1; // Set default koefisien
+  const userId = checkAuth();
+  if (!userId) return;
+
+  selectedMaterialId = id;
+  const koefisien = 1;
 
   const total = price * koefisien;
 
@@ -159,17 +197,20 @@ function selectMaterial(id, name, price) {
   tableBody.appendChild(row);
 
   ipcRenderer.send("add-pricing", {
-    ahs_id: selectedAhsId, // Pastikan selectedAhsId sudah benar
+    ahs_id: selectedAhsId,
     material_id: selectedMaterialId,
     quantity: koefisien,
     koefisien: koefisien,
+    userId,
   });
 
   closeSearchMaterialModal();
 }
 
 function updateKoefisien(materialId, newKoefisien) {
-  // Find the row containing the input that triggered this change
+  const userId = checkAuth();
+  if (!userId) return;
+
   const input = document.querySelector(
     `input[onchange*="updateKoefisien(${materialId}"]`
   );
@@ -181,55 +222,51 @@ function updateKoefisien(materialId, newKoefisien) {
   const pricingId = parseInt(row.dataset.pricingId, 10);
   if (!pricingId) return;
 
-  // Get price from the price cell (index 4) and remove the "Rp " prefix
   const cells = row.getElementsByTagName("td");
   const price = parseFloat(cells[4].innerText.replace("Rp ", ""));
   const totalCell = cells[5];
   const newTotal = price * newKoefisien;
 
-  // Update the total cell with the new calculation
   totalCell.innerText = `Rp ${newTotal}`;
 
-  // Send update to main process
   ipcRenderer.send("update-pricing", {
     pricing_id: pricingId,
     ahs_id: parseInt(selectedAhsId, 10),
     koefisien: parseFloat(newKoefisien),
+    userId,
   });
 }
 
-// Add row selection functionality
-document.addEventListener("DOMContentLoaded", () => {
+function initializeMaterialTable() {
   const materialTable = document.getElementById("materialDetails");
   materialTable.addEventListener("click", (e) => {
     const row = e.target.closest("tr");
     if (!row) return;
 
-    // Remove selection from other rows
     document.querySelectorAll("#materialDetails tr").forEach((r) => {
       r.classList.remove("selected");
     });
 
-    // Add selection to clicked row
     row.classList.add("selected");
   });
-});
+}
 
 function deleteMaterial() {
+  const userId = checkAuth();
+  if (!userId) return;
+
   const selectedRow = document.querySelector("#materialDetails tr.selected");
   if (!selectedRow) {
     alert("Silakan pilih bahan/upah yang akan dihapus");
     return;
   }
 
-  // Get the pricing ID directly from the row's dataset
   const pricingId = selectedRow.dataset.pricingId;
   if (pricingId) {
-    ipcRenderer.send("delete-pricing", parseInt(pricingId, 10)); // Convert to integer
+    ipcRenderer.send("delete-pricing", { id: parseInt(pricingId, 10), userId });
   }
 }
 
-// Add listeners for deletion and update responses
 ipcRenderer.on("pricing-deleted", (event, response) => {
   if (response && response.error) {
     alert("Gagal menghapus: " + response.error);
@@ -253,8 +290,13 @@ function editKoefisien() {
   koefisienInput.focus();
 }
 
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}
+
 function goBack() {
-  window.location.href = "index.html"; // Ganti dengan alamat homepage Anda
+  window.location.href = "index.html";
 }
 
 // Add CSS for selected row
