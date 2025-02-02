@@ -74,14 +74,21 @@ function setupImportHandlers(ipcMain, db) {
             );
 
             materialsSheet.eachRow((row, rowNumber) => {
-              if (rowNumber > 1) {
-                // Skip header row
+              // Skip instruction and header rows (first 6 rows)
+              if (rowNumber > 6) {
+                const price = row.getCell(3).value;
+                // Handle formatted currency cells
+                const priceValue =
+                  typeof price === "object"
+                    ? price.result || price.value
+                    : price;
+
                 stmt.run(
                   [
                     userId,
                     row.getCell(1).value, // name
                     row.getCell(2).value, // unit
-                    row.getCell(3).value, // price
+                    priceValue, // price (cleaned)
                     row.getCell(4).value, // category
                     row.getCell(5).value, // description
                   ],
@@ -108,8 +115,8 @@ function setupImportHandlers(ipcMain, db) {
             );
 
             ahsSheet.eachRow((row, rowNumber) => {
-              if (rowNumber > 1) {
-                // Skip header row
+              // Skip instruction and header rows (first 6 rows)
+              if (rowNumber > 6) {
                 stmt.run(
                   [
                     userId,
@@ -141,8 +148,8 @@ function setupImportHandlers(ipcMain, db) {
             );
 
             projectsSheet.eachRow((row, rowNumber) => {
-              if (rowNumber > 1) {
-                // Skip header row
+              // Skip instruction and header rows (first 5 rows)
+              if (rowNumber > 5) {
                 stmt.run(
                   [
                     userId,
@@ -166,33 +173,107 @@ function setupImportHandlers(ipcMain, db) {
         // Import Pricing
         if (workbook.getWorksheet("Pricing")) {
           const pricingSheet = workbook.getWorksheet("Pricing");
+
+          // Get AHS and material mappings
+          const [ahsRows, materialRows] = await Promise.all([
+            new Promise((resolve, reject) => {
+              db.all(
+                "SELECT id, kode_ahs FROM ahs WHERE user_id = ?",
+                [userId],
+                (err, rows) => {
+                  if (err) reject(err);
+                  else resolve(rows);
+                }
+              );
+            }),
+            new Promise((resolve, reject) => {
+              db.all(
+                "SELECT id, name FROM materials WHERE user_id = ?",
+                [userId],
+                (err, rows) => {
+                  if (err) reject(err);
+                  else resolve(rows);
+                }
+              );
+            }),
+          ]);
+
+          const ahsMap = new Map(ahsRows.map((row) => [row.kode_ahs, row.id]));
+          const materialMap = new Map(
+            materialRows.map((row) => [row.name, row.id])
+          );
+
           await new Promise((resolve, reject) => {
             const stmt = db.prepare(
               "INSERT INTO pricing (user_id, ahs_id, material_id, quantity, koefisien) VALUES (?, ?, ?, ?, ?)"
             );
 
-            pricingSheet.eachRow((row, rowNumber) => {
-              if (rowNumber > 1) {
-                // Skip header row
-                stmt.run(
-                  [
-                    userId,
-                    row.getCell(1).value, // ahs_id
-                    row.getCell(2).value, // material_id
-                    row.getCell(3).value, // quantity
-                    row.getCell(4).value, // koefisien
-                  ],
-                  (err) => {
-                    if (err) reject(err);
-                  }
+            const insertPromises = [];
+
+            // Process each row
+            for (
+              let rowNumber = 7;
+              rowNumber <= pricingSheet.rowCount;
+              rowNumber++
+            ) {
+              const row = pricingSheet.getRow(rowNumber);
+              const kodeAhs = row.getCell(1).value;
+              const materialName = row.getCell(2).value;
+
+              if (kodeAhs && materialName) {
+                const ahsId = ahsMap.get(kodeAhs);
+                const materialId = materialMap.get(materialName);
+
+                if (!ahsId) {
+                  console.warn(`Warning: AHS code "${kodeAhs}" not found`);
+                  continue;
+                }
+                if (!materialId) {
+                  console.warn(`Warning: Material "${materialName}" not found`);
+                  continue;
+                }
+
+                let quantity = row.getCell(3).value;
+                let koefisien = row.getCell(4).value;
+
+                // Handle formatted number cells
+                quantity =
+                  typeof quantity === "object"
+                    ? quantity.result || quantity.value
+                    : quantity;
+                koefisien =
+                  typeof koefisien === "object"
+                    ? koefisien.result || koefisien.value
+                    : koefisien;
+
+                insertPromises.push(
+                  new Promise((resolve, reject) => {
+                    stmt.run(
+                      [userId, ahsId, materialId, quantity, koefisien],
+                      (err) => {
+                        if (err) {
+                          console.warn(
+                            `Warning: Error inserting pricing row: ${err.message}`
+                          );
+                          reject(err);
+                        } else {
+                          resolve();
+                        }
+                      }
+                    );
+                  })
                 );
               }
-            });
+            }
 
-            stmt.finalize((err) => {
-              if (err) reject(err);
-              else resolve();
-            });
+            Promise.all(insertPromises)
+              .then(() => {
+                stmt.finalize((err) => {
+                  if (err) reject(err);
+                  else resolve();
+                });
+              })
+              .catch(reject);
           });
         }
 
