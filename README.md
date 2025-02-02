@@ -88,6 +88,9 @@ node src/database/init.js
 
 # Mulai server pengembangan
 npm start
+
+#instalasi Kodingan Menjadi Program .Exe
+npx electron-packager . project-rab --platform=win32 --arch=x64 --out=dist --overwrite
 ```
 
 ## Penggunaan
