@@ -14,6 +14,11 @@ function showDetailReport() {
   loadDetailData();
 }
 
+// Handle back button
+function goBack() {
+  window.location.href = "index.html";
+}
+
 // Format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat("id-ID", {
@@ -118,3 +123,12 @@ ipcRenderer.on("detail-data", (event, data) => {
 
 // Show summary report by default when page loads
 showSummaryReport();
+
+// Add event listeners for buttons
+document.addEventListener("DOMContentLoaded", () => {
+  // Back button
+  const backBtn = document.querySelector(".back-btn");
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
+  }
+});
