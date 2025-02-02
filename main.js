@@ -5,6 +5,7 @@ const { setupAuthHandlers } = require("./src/handlers/authHandlers");
 const { setupMaterialHandlers } = require("./src/handlers/materialHandlers");
 const { setupAHSHandlers } = require("./src/handlers/ahsHandlers");
 const { setupPricingHandlers } = require("./src/handlers/pricingHandlers");
+const { setupProjectHandlers } = require("./src/handlers/projectHandlers");
 
 let mainWindow;
 let db;
@@ -29,6 +30,7 @@ function createWindow() {
       setupMaterialHandlers(ipcMain, db);
       setupAHSHandlers(ipcMain, db);
       setupPricingHandlers(ipcMain, db);
+      setupProjectHandlers(ipcMain, db);
     })
     .catch(console.error);
 
