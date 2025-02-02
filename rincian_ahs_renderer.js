@@ -5,8 +5,8 @@ let selectedAhsId = 1;
 
 function openAhsModal() {
   const modal = document.getElementById("searchAhsModal");
-  modal.style.display = "block";
-  loadAhs();
+  modal.style.display = "block"; // Ensure modal is shown
+  loadAhs(); // Load AHS data when the modal is opened
 }
 
 function closeSearchAhsModal() {
@@ -120,7 +120,7 @@ ipcRenderer.on("materials-data", (event, materials) => {
 });
 
 function selectMaterial(id, name, price) {
-  selectedMaterialId = id;
+  selectedMaterialId = id; // Set selected material ID
   const koefisien = 1; // Set default koefisien
 
   const total = price * koefisien;
@@ -138,7 +138,7 @@ function selectMaterial(id, name, price) {
   tableBody.appendChild(row);
 
   ipcRenderer.send("add-pricing", {
-    ahs_id: selectedAhsId,
+    ahs_id: selectedAhsId, // Pastikan selectedAhsId sudah benar
     material_id: selectedMaterialId,
     quantity: koefisien,
     koefisien: koefisien,
