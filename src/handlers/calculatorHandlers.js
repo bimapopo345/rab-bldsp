@@ -5,12 +5,12 @@ function setupCalculatorHandlers(ipcMain, db) {
             SELECT 
                 a.ahs as deskripsi,
                 a.satuan,
-                COALESCE(SUM(p.koefisien * m.price), 0) as hrg_satuan,
-                1 as volume
+                m.price as hrg_satuan,
+                p.koefisien as volume
             FROM ahs a
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
-            GROUP BY a.id, a.ahs, a.satuan
+            WHERE p.koefisien IS NOT NULL
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
@@ -31,12 +31,12 @@ function setupCalculatorHandlers(ipcMain, db) {
                 a.kelompok,
                 a.ahs as deskripsi,
                 a.satuan,
-                COALESCE(SUM(p.koefisien * m.price), 0) as hrg_satuan,
-                1 as volume
+                m.price as hrg_satuan,
+                p.koefisien as volume
             FROM ahs a
             LEFT JOIN pricing p ON a.id = p.ahs_id
             LEFT JOIN materials m ON p.material_id = m.id
-            GROUP BY a.id, a.kelompok, a.ahs, a.satuan
+            WHERE p.koefisien IS NOT NULL
             ORDER BY a.kelompok, a.kode_ahs
         `;
 
@@ -53,6 +53,7 @@ function setupCalculatorHandlers(ipcMain, db) {
         if (!acc[kelompok]) {
           acc[kelompok] = [];
         }
+        // Remove kelompok from individual row data
         const { kelompok: _, ...rowWithoutKelompok } = row;
         acc[kelompok].push(rowWithoutKelompok);
         return acc;

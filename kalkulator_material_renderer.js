@@ -29,6 +29,14 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
+// Format number with 2 decimal places
+function formatNumber(number) {
+  return new Intl.NumberFormat("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(number);
+}
+
 // Load summary data
 function loadSummaryData() {
   ipcRenderer.send("get-summary-data");
@@ -47,14 +55,14 @@ ipcRenderer.on("summary-data", (event, data) => {
 
   data.forEach((item) => {
     const row = document.createElement("tr");
-    const biaya = item.hrg_satuan * item.volume;
+    const biaya = (item.hrg_satuan || 0) * (item.volume || 0);
     totalBiaya += biaya;
 
     row.innerHTML = `
             <td>${item.deskripsi}</td>
             <td>${item.satuan}</td>
-            <td>${formatCurrency(item.hrg_satuan)}</td>
-            <td>${item.volume}</td>
+            <td>${formatCurrency(item.hrg_satuan || 0)}</td>
+            <td>${formatNumber(item.volume || 0)}</td>
             <td>${formatCurrency(biaya)}</td>
         `;
     tbody.appendChild(row);
@@ -91,15 +99,15 @@ ipcRenderer.on("detail-data", (event, data) => {
 
     const tbody = document.createElement("tbody");
     items.forEach((item) => {
-      const biaya = item.hrg_satuan * item.volume;
+      const biaya = (item.hrg_satuan || 0) * (item.volume || 0);
       groupTotal += biaya;
 
       const row = document.createElement("tr");
       row.innerHTML = `
                 <td>${item.deskripsi}</td>
                 <td>${item.satuan}</td>
-                <td>${formatCurrency(item.hrg_satuan)}</td>
-                <td>${item.volume}</td>
+                <td>${formatCurrency(item.hrg_satuan || 0)}</td>
+                <td>${formatNumber(item.volume || 0)}</td>
                 <td>${formatCurrency(biaya)}</td>
             `;
       tbody.appendChild(row);
