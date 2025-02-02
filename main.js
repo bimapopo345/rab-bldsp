@@ -6,6 +6,9 @@ const { setupMaterialHandlers } = require("./src/handlers/materialHandlers");
 const { setupAHSHandlers } = require("./src/handlers/ahsHandlers");
 const { setupPricingHandlers } = require("./src/handlers/pricingHandlers");
 const { setupProjectHandlers } = require("./src/handlers/projectHandlers");
+const {
+  setupCalculatorHandlers,
+} = require("./src/handlers/calculatorHandlers");
 
 let mainWindow;
 let db;
@@ -31,6 +34,7 @@ function createWindow() {
       setupAHSHandlers(ipcMain, db);
       setupPricingHandlers(ipcMain, db);
       setupProjectHandlers(ipcMain, db);
+      setupCalculatorHandlers(ipcMain, db);
     })
     .catch(console.error);
 
