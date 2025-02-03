@@ -70,7 +70,7 @@ Project RAB adalah aplikasi web yang dirancang untuk mengelola dan mencetak doku
 
 ## Prasyarat
 
-- Node.js (versi 14 atau lebih tinggi)
+- Node.js (versi 14 atau lebih tinggi) > v20.18.2
 - npm (versi 6 atau lebih tinggi)
 
 ## Instalasi
